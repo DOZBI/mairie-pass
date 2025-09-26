@@ -21,7 +21,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -44,7 +44,7 @@ const Auth = () => {
         title: "Connexion réussie",
         description: "Vous êtes maintenant connecté.",
       });
-      navigate('/');
+      navigate('/dashboard');
     }
     
     setLoading(false);
