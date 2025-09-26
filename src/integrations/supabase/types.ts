@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          city_hall_name: string
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          identity_card_back_url: string | null
+          identity_card_front_url: string | null
+          last_name: string
+          neighborhood: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city_hall_name: string
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          identity_card_back_url?: string | null
+          identity_card_front_url?: string | null
+          last_name: string
+          neighborhood: string
+          phone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city_hall_name?: string
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          identity_card_back_url?: string | null
+          identity_card_front_url?: string | null
+          last_name?: string
+          neighborhood?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
