@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,18 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSetup = () => {
+  const location = useLocation();
+  // Récupération du téléphone pré-rempli depuis la page d'inscription
+  const initialPhone = (location.state as { initialPhone?: string })?.initialPhone || '';
+
   const [formData, setFormData] = useState({
-    phone: '',
+    phone: initialPhone, // Initialisation avec le téléphone
     firstName: '',
     lastName: '',
+    address: '', // NOUVEAU CHAMP: Adresse
+    city: '', // NOUVEAU CHAMP: Ville (sera mappé à city_hall_name dans la DB pour le moment)
     neighborhood: '',
-    cityHallName: '',
+    cityHallName: '', // Mairie du quartier (Champ distinct pour la clarté)
   });
   const [identityCardFront, setIdentityCardFront] = useState<File | null>(null);
   const [identityCardBack, setIdentityCardBack] = useState<File | null>(null);
@@ -51,7 +57,7 @@ const ProfileSetup = () => {
         });
         return;
       }
-      
+
       if (!file.type.startsWith('image/')) {
         toast({
           variant: "destructive",
@@ -84,6 +90,11 @@ const ProfileSetup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!identityCardFront || !identityCardBack) {
+      setError("Veuillez télécharger les deux faces de votre carte d'identité.");
+      return;
+    }
+
 
     setLoading(true);
     setError('');
@@ -96,7 +107,7 @@ const ProfileSetup = () => {
       if (identityCardFront) {
         const frontPath = `${user.id}/identity-card-front-${Date.now()}.${identityCardFront.name.split('.').pop()}`;
         await uploadFile(identityCardFront, frontPath);
-        
+
         const { data: frontData } = supabase.storage
           .from('identity-cards')
           .getPublicUrl(frontPath);
@@ -106,7 +117,7 @@ const ProfileSetup = () => {
       if (identityCardBack) {
         const backPath = `${user.id}/identity-card-back-${Date.now()}.${identityCardBack.name.split('.').pop()}`;
         await uploadFile(identityCardBack, backPath);
-        
+
         const { data: backData } = supabase.storage
           .from('identity-cards')
           .getPublicUrl(backPath);
@@ -120,8 +131,9 @@ const ProfileSetup = () => {
           phone: formData.phone,
           first_name: formData.firstName,
           last_name: formData.lastName,
+          address: formData.address, // MISE À JOUR: Enregistrement de l'adresse
           neighborhood: formData.neighborhood,
-          city_hall_name: formData.cityHallName,
+          city_hall_name: formData.city, // MISE À JOUR: Mappage du champ 'city' vers 'city_hall_name' DB
           identity_card_front_url: frontUrl || null,
           identity_card_back_url: backUrl || null,
         })
@@ -134,7 +146,7 @@ const ProfileSetup = () => {
         description: "Votre profil a été configuré. Vous pouvez maintenant accéder aux services.",
       });
 
-      navigate('/');
+      navigate('/dashboard'); // Redirection vers le dashboard après configuration
     } catch (error: any) {
       setError(error.message);
       toast({
@@ -205,6 +217,32 @@ const ProfileSetup = () => {
                 placeholder="+237 6XX XXX XXX"
               />
             </div>
+            
+            {/* NOUVEAU CHAMP: Adresse */}
+            <div className="space-y-2">
+              <Label htmlFor="address">Adresse complète *</Label>
+              <Input
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                required
+                placeholder="Ex: 123 Rue de la République"
+              />
+            </div>
+
+            {/* NOUVEAU CHAMP: Ville */}
+            <div className="space-y-2">
+              <Label htmlFor="city">Ville *</Label>
+              <Input
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                required
+                placeholder="Ville de résidence"
+              />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="neighborhood">Quartier *</Label>
@@ -231,8 +269,8 @@ const ProfileSetup = () => {
             </div>
 
             <div className="space-y-4">
-              <Label>Photos de la carte d'identité</Label>
-              
+              <Label>Photos de la carte d'identité *</Label>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="front-upload" className="text-sm text-muted-foreground">
@@ -256,7 +294,7 @@ const ProfileSetup = () => {
                       className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-muted-foreground/25 rounded-md cursor-pointer hover:bg-accent/50"
                     >
                       <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <span className="text-sm text-muted-foreground">Cliquer pour ajouter</span>
+                      <span className="text-sm text-muted-foreground">Cliquer pour ajouter (Recto)</span>
                     </Label>
                   )}
                   <Input
@@ -290,7 +328,7 @@ const ProfileSetup = () => {
                       className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-muted-foreground/25 rounded-md cursor-pointer hover:bg-accent/50"
                     >
                       <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <span className="text-sm text-muted-foreground">Cliquer pour ajouter</span>
+                      <span className="text-sm text-muted-foreground">Cliquer pour ajouter (Verso)</span>
                     </Label>
                   )}
                   <Input
