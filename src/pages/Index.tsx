@@ -59,12 +59,15 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-md transition-shadow">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer" 
+            onClick={() => navigate('/documents')}
+          >
             <CardHeader>
               <FileText className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Extrait d'acte de naissance</CardTitle>
+              <CardTitle>Demander un document</CardTitle>
               <CardDescription>
-                Demandez un extrait d'acte de naissance avec paiement sécurisé
+                Acte de naissance, casier judiciaire et autres documents officiels
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -74,17 +77,20 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/my-requests')}
+          >
             <CardHeader>
               <Users className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Copie d'acte de naissance</CardTitle>
+              <CardTitle>Mes demandes</CardTitle>
               <CardDescription>
-                Obtenez une copie intégrale d'acte de naissance
+                Suivre l'état de vos demandes en cours et télécharger vos documents
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">
-                Faire une demande
+              <Button className="w-full" variant="outline">
+                Voir mes demandes
               </Button>
             </CardContent>
           </Card>
@@ -92,14 +98,14 @@ const Index = () => {
           <Card className="hover:shadow-md transition-shadow">
             <CardHeader>
               <Shield className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Casier judiciaire</CardTitle>
+              <CardTitle>Mon profil</CardTitle>
               <CardDescription>
-                Demandez votre bulletin de casier judiciaire
+                Gérer vos informations personnelles et documents d'identité
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">
-                Faire une demande
+              <Button className="w-full" variant="outline">
+                Modifier le profil
               </Button>
             </CardContent>
           </Card>

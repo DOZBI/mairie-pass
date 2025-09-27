@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      document_requests: {
+        Row: {
+          additional_info: Json | null
+          admin_notes: string | null
+          created_at: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          document_url: string | null
+          id: string
+          reason: string | null
+          status: Database["public"]["Enums"]["request_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_info?: Json | null
+          admin_notes?: string | null
+          created_at?: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          document_url?: string | null
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_info?: Json | null
+          admin_notes?: string | null
+          created_at?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          document_url?: string | null
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           city_hall_name: string
@@ -67,7 +114,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      document_type:
+        | "birth_certificate_extract"
+        | "birth_certificate_full"
+        | "criminal_record"
+      request_status:
+        | "pending"
+        | "in_review"
+        | "approved"
+        | "rejected"
+        | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -194,6 +250,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      document_type: [
+        "birth_certificate_extract",
+        "birth_certificate_full",
+        "criminal_record",
+      ],
+      request_status: [
+        "pending",
+        "in_review",
+        "approved",
+        "rejected",
+        "completed",
+      ],
+    },
   },
 } as const
