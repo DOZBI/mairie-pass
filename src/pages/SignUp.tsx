@@ -67,7 +67,7 @@ const SignUp = () => {
 
       const { error: signUpError, data: signUpData } = await signUp(email, password);
 
-      if (signUpError || !signUpData.user) {
+      if (signUpError || !signUpData?.user) {
         toast({
           variant: "destructive",
           title: "Erreur d'inscription",
