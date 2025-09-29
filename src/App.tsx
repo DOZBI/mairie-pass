@@ -13,42 +13,11 @@ import DocumentRequests from "./pages/DocumentRequests";
 import MyRequests from "./pages/MyRequests";
 import NotFound from "./pages/NotFound";
 import SignUp from "./pages/SignUp";
-import Cover from "./pages/Cover";
+
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const [showCover, setShowCover] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
-    if (!hasVisitedBefore) {
-      setShowCover(true);
-    }
-    setIsLoading(false);
-  }, []);
-
-  const handleGetStarted = () => {
-    localStorage.setItem('hasVisitedBefore', 'true');
-    setShowCover(false);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse">
-          <div className="h-8 w-48 bg-muted rounded mb-4 mx-auto"></div>
-          <div className="h-4 w-64 bg-muted rounded mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (showCover) {
-    return <Cover onGetStarted={handleGetStarted} />;
-  }
-
   return (
     <BrowserRouter>
       <Routes>

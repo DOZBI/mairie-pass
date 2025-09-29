@@ -7,15 +7,20 @@ const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      {/* Header - Style WhatsApp */}
+      <header className="bg-card border-b border-border/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Mairie - Services en ligne</h1>
-            <p className="text-sm text-muted-foreground">Documents d'état civil</p>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Mairie Pass</h1>
+              <p className="text-xs text-muted-foreground">Documents officiels</p>
+            </div>
           </div>
-          <Button onClick={() => navigate('/auth')}>
+          <Button onClick={() => navigate('/auth')} className="rounded-full">
             Se connecter
           </Button>
         </div>
