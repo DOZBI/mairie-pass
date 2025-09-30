@@ -6,24 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft, Mail, Phone, Lock, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-// Simuler les services externes
-const supabaseSignUp = (email: string, password: string, name: string) => {
-  console.log(`Tentative d'inscription Supabase pour: ${email}`);
-  return new Promise(resolve => setTimeout(() => resolve({ success: true, needsVerification: true }), 1500));
-};
-
-const supabaseSignIn = (email: string, password: string) => {
-  console.log(`Tentative de connexion Supabase pour: ${email}`);
-  return new Promise((resolve) => setTimeout(() => {
-    resolve({ success: true }); 
-  }, 1500));
-};
-
-const twilioVerification = (phone: string) => {
-  console.log(`Tentative de vérification Twilio pour: ${phone}`);
-  return new Promise(resolve => setTimeout(() => resolve({ success: true }), 1500));
-};
+import { useAuth } from '@/contexts/AuthContext';
 
 const SignUp = () => {
   const [isLoginMode, setIsLoginMode] = useState(false); 
@@ -40,6 +23,7 @@ const SignUp = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, signIn } = useAuth();
 
   const handleNextStep = () => {
     setError('');
@@ -74,16 +58,21 @@ const SignUp = () => {
     try {
       if (!email || !password) throw new Error("Veuillez fournir un email et un mot de passe.");
       
-      const result: any = await supabaseSignIn(email, password);
+      const { error } = await signIn(email, password);
       
-      if (result.success) {
+      if (error) {
+        setError(error.message || "Identifiants incorrects ou échec de la connexion.");
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: error.message,
+        });
+      } else {
         toast({
           title: "Connexion réussie",
           description: "Vous êtes maintenant connecté.",
         });
-        navigate('/document-requests'); 
-      } else {
-        setError("Identifiants incorrects ou échec de la connexion.");
+        navigate('/documents');
       }
 
     } catch (err: any) {
@@ -103,40 +92,35 @@ const SignUp = () => {
     setLoading(true);
     setError('');
 
-    const fullName = `${firstName} ${lastName}`;
-    let result: any;
-
     try {
       if (contactMethod === 'email') {
         if (!email || !password) throw new Error("Veuillez fournir un email et un mot de passe.");
-        result = await supabaseSignUp(email, password, fullName);
         
-        if (result.success) {
+        const { error } = await signUp(email, password);
+        
+        if (error) {
+          setError(error.message || "Échec de l'inscription par email.");
           toast({
-            title: "Validation requise",
-            description: "Un lien de vérification a été envoyé à votre adresse email. Veuillez cliquer dessus pour activer votre compte.",
+            variant: "destructive",
+            title: "Erreur",
+            description: error.message,
           });
-          setIsLoginMode(true); 
-          setPassword('');
-          setLoading(false);
-          return;
         } else {
-          setError("Échec de l'inscription par email.");
+          toast({
+            title: "Inscription réussie",
+            description: "Votre compte a été créé avec succès.",
+          });
+          navigate('/documents');
         }
 
       } else {
         if (!phone) throw new Error("Veuillez fournir un numéro de téléphone.");
-        result = await twilioVerification(phone);
         
-        if (result.success) {
-          toast({
-            title: "Code envoyé",
-            description: "Un code de vérification a été envoyé à votre numéro de téléphone. Veuillez le saisir.",
-          });
-          navigate('/verify-code'); 
-        } else {
-          setError("Échec de l'envoi du code de vérification par téléphone.");
-        }
+        // Pour l'instant, la vérification par téléphone n'est pas implémentée
+        toast({
+          title: "Fonctionnalité à venir",
+          description: "La vérification par téléphone sera bientôt disponible. Veuillez utiliser l'email.",
+        });
       }
 
     } catch (err: any) {
