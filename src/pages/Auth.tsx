@@ -37,8 +37,9 @@ const ProgressIndicator = ({ currentStep, totalSteps = 3 }: { currentStep: numbe
 );
 
 // --- Composant Pied de Page de Navigation (Retour/Suivant) ---
+// Rendu ajusté pour ne pas afficher "Retour" à l'étape 1 du wizard
 const NavFooter = ({ onBack, onNext, isNextDisabled = false, nextText = "Suivant", step, currentTextColor, loading }: any) => {
-    // Le bouton "Suivant" est un bouton de soumission
+    // Détermine si le bouton est un submit natif ou un bouton React
     const ButtonComponent = onNext.type === 'submit' ? 'button' : Button;
     
     return (
@@ -53,11 +54,11 @@ const NavFooter = ({ onBack, onNext, isNextDisabled = false, nextText = "Suivant
                     <ArrowLeft className="mr-1 h-4 w-4" /> Retour
                 </Button>
             )}
-            <div className={step === 1 ? 'w-full' : ''}> {/* Alignement à droite pour le premier bouton */}
+            <div className={step === 1 ? 'w-full flex justify-end' : ''}>
                 <ButtonComponent 
                     onClick={onNext.type === 'submit' ? undefined : onNext} 
                     type={onNext.type === 'submit' ? 'submit' : 'button'}
-                    className={`text-sm font-bold bg-white text-green-600 hover:bg-gray-100/90 transition-colors shadow-lg rounded-full px-6 py-2 ${step === 1 ? 'float-right' : ''}`}
+                    className={`text-sm font-bold bg-white text-green-600 hover:bg-gray-100/90 transition-colors shadow-lg rounded-full px-6 py-2`}
                     disabled={isNextDisabled || loading}
                 >
                     {loading && nextText.includes('...') ? <Loader2 className="h-4 w-4 animate-spin" /> : nextText}
@@ -138,13 +139,14 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
         setLoading(false);
     };
 
-    // --- Rendu des étapes (similaire à la version précédente) ---
+    // --- Rendu des étapes ---
     
     const renderStep1 = () => (
         <form onSubmit={handleStep1Submit} className="flex flex-col h-full p-8">
             <div className="flex justify-end">
+                {/* Lien pour basculer vers la connexion */}
                 <Button variant="link" onClick={() => setMode('signin')} className={`${SKIP_COLOR} font-semibold`}>
-                    Passer
+                    Connectez-vous
                 </Button>
             </div>
             
@@ -175,7 +177,8 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
     const renderStep2 = () => (
         <form onSubmit={handleFinalSignUp} className="flex flex-col h-full p-8">
             <div className="flex justify-end">
-                <Button variant="link" onClick={() => setMode('signin')} className={`${TEXT_COLOR} opacity-70 hover:opacity-100 font-semibold`}> Passer </Button>
+                 {/* Lien pour basculer vers la connexion */}
+                <Button variant="link" onClick={() => setMode('signin')} className={`${TEXT_COLOR} opacity-70 hover:opacity-100 font-semibold`}> Connectez-vous </Button>
             </div>
             
             <div className={`flex-1 flex flex-col justify-center items-center text-center ${currentTextColor}`}>
@@ -197,7 +200,7 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
                 step={2}
                 currentTextColor={currentTextColor}
                 onBack={() => setStep(1)} 
-                onNext={{type: 'submit'}} // Indique que c'est le bouton submit
+                onNext={{type: 'submit'}} 
                 isNextDisabled={!password || password.length < 6}
                 nextText={loading ? "Inscription..." : "S'inscrire"}
                 loading={loading}
@@ -220,7 +223,7 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
                 <Button onClick={() => navigate('/dashboard')} className={`w-full max-w-sm h-12 text-lg font-bold bg-white text-green-600 hover:bg-gray-100/90 transition-colors shadow-lg rounded-full`}>
                     Aller au Tableau de Bord
                 </Button>
-                <Button variant="link" onClick={() => { /* Renvoyer le mail */ toast({ title: "Renvoyé", description: "Email de confirmation renvoyé." }); }} className="mt-4 text-white/80 hover:text-white">
+                <Button variant="link" onClick={() => { toast({ title: "Renvoyé", description: "Email de confirmation renvoyé." }); }} className="mt-4 text-white/80 hover:text-white">
                     Renvoyer l'email
                 </Button>
             </div>
@@ -233,7 +236,6 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
                 {step === 3 && renderStep3()}
-                {/* Lien "Connectez-vous" est dans le rendu de chaque étape */}
             </div>
         </div>
     );
@@ -271,6 +273,7 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
         <div className={`min-h-screen ${PRIMARY_COLOR} transition-colors duration-500 flex flex-col`}>
             <div className="flex-1 max-w-md w-full mx-auto p-8 relative">
                 <div className="flex justify-end">
+                    {/* Lien pour basculer vers l'inscription (Sign Up) */}
                     <Button 
                         variant="link" 
                         onClick={() => setMode('signup')}
@@ -328,7 +331,7 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
                     </Button>
                 </div>
                 
-                {/* Bouton pour basculer vers l'inscription en bas */}
+                {/* Lien pour basculer vers l'inscription en bas */}
                 <div className="absolute bottom-4 left-0 right-0 p-4 text-center">
                     <p className="text-white/80">
                         Pas encore de compte ?{' '}
@@ -349,8 +352,8 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
 
 // --- Composant Principal d'Authentification ---
 const AuthScreen = () => {
-    // État pour basculer entre 'signin' et 'signup' (le wizard)
-    const [mode, setMode] = useState<'signin' | 'signup'>('signup');
+    // État initial défini sur 'signin' pour commencer par la connexion
+    const [mode, setMode] = useState<'signin' | 'signup'>('signin');
     const { user } = useAuth();
     const navigate = useNavigate();
 
