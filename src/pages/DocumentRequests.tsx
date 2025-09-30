@@ -1,34 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowLeft, FileText, Shield, User, LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, FileText, Shield, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import DocumentRequestForm from '@/components/DocumentRequestForm';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 
 const DocumentRequests = () => {
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
-  const { signOut, user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Déconnexion réussie",
-        description: "À bientôt !",
-      });
-      navigate('/');
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de se déconnecter.",
-      });
-    }
-  };
 
   const documentTypes = [
     {
@@ -96,18 +74,12 @@ const DocumentRequests = () => {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <Link to="/">
-            <Button variant="ghost">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour au tableau de bord
-            </Button>
-          </Link>
-          <Button variant="outline" onClick={handleSignOut} className="text-destructive hover:bg-destructive/10">
-            <LogOut className="mr-2 h-4 w-4" />
-            Se déconnecter
+        <Link to="/">
+          <Button variant="ghost" className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour au tableau de bord
           </Button>
-        </div>
+        </Link>
         <h1 className="text-3xl font-bold text-foreground">Demander un document</h1>
         <p className="text-muted-foreground mt-2">
           Sélectionnez le type de document que vous souhaitez demander

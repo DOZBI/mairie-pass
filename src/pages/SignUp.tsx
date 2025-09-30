@@ -6,7 +6,24 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft, Mail, Phone, Lock, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+
+// Simuler les services externes
+const supabaseSignUp = (email: string, password: string, name: string) => {
+  console.log(`Tentative d'inscription Supabase pour: ${email}`);
+  return new Promise(resolve => setTimeout(() => resolve({ success: true, needsVerification: true }), 1500));
+};
+
+const supabaseSignIn = (email: string, password: string) => {
+  console.log(`Tentative de connexion Supabase pour: ${email}`);
+  return new Promise((resolve) => setTimeout(() => {
+    resolve({ success: true }); 
+  }, 1500));
+};
+
+const twilioVerification = (phone: string) => {
+  console.log(`Tentative de vérification Twilio pour: ${phone}`);
+  return new Promise(resolve => setTimeout(() => resolve({ success: true }), 1500));
+};
 
 const SignUp = () => {
   const [isLoginMode, setIsLoginMode] = useState(false); 
@@ -23,7 +40,6 @@ const SignUp = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp, signIn } = useAuth();
 
   const handleNextStep = () => {
     setError('');
@@ -58,21 +74,16 @@ const SignUp = () => {
     try {
       if (!email || !password) throw new Error("Veuillez fournir un email et un mot de passe.");
       
-      const { error } = await signIn(email, password);
+      const result: any = await supabaseSignIn(email, password);
       
-      if (error) {
-        setError(error.message || "Identifiants incorrects ou échec de la connexion.");
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: error.message,
-        });
-      } else {
+      if (result.success) {
         toast({
           title: "Connexion réussie",
           description: "Vous êtes maintenant connecté.",
         });
-        navigate('/documents');
+        navigate('/document-requests'); 
+      } else {
+        setError("Identifiants incorrects ou échec de la connexion.");
       }
 
     } catch (err: any) {
@@ -92,35 +103,40 @@ const SignUp = () => {
     setLoading(true);
     setError('');
 
+    const fullName = `${firstName} ${lastName}`;
+    let result: any;
+
     try {
       if (contactMethod === 'email') {
         if (!email || !password) throw new Error("Veuillez fournir un email et un mot de passe.");
+        result = await supabaseSignUp(email, password, fullName);
         
-        const { error } = await signUp(email, password);
-        
-        if (error) {
-          setError(error.message || "Échec de l'inscription par email.");
+        if (result.success) {
           toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: error.message,
+            title: "Validation requise",
+            description: "Un lien de vérification a été envoyé à votre adresse email. Veuillez cliquer dessus pour activer votre compte.",
           });
+          setIsLoginMode(true); 
+          setPassword('');
+          setLoading(false);
+          return;
         } else {
-          toast({
-            title: "Inscription réussie",
-            description: "Votre compte a été créé avec succès.",
-          });
-          navigate('/documents');
+          setError("Échec de l'inscription par email.");
         }
 
       } else {
         if (!phone) throw new Error("Veuillez fournir un numéro de téléphone.");
+        result = await twilioVerification(phone);
         
-        // Pour l'instant, la vérification par téléphone n'est pas implémentée
-        toast({
-          title: "Fonctionnalité à venir",
-          description: "La vérification par téléphone sera bientôt disponible. Veuillez utiliser l'email.",
-        });
+        if (result.success) {
+          toast({
+            title: "Code envoyé",
+            description: "Un code de vérification a été envoyé à votre numéro de téléphone. Veuillez le saisir.",
+          });
+          navigate('/verify-code'); 
+        } else {
+          setError("Échec de l'envoi du code de vérification par téléphone.");
+        }
       }
 
     } catch (err: any) {
