@@ -3,22 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, ArrowLeft, CheckCircle, Mail, Smartphone, User } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle, Mail, Smartphone, User, ScrollText, Lock, Award, Heart, Briefcase } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // --- CONFIGURATION COULEUR ET TEXTES ---
-const PRIMARY_COLOR = 'bg-green-600 hover:bg-green-700';
-const SECONDARY_COLOR = 'bg-lime-500'; 
-const TERTIARY_COLOR = 'bg-amber-400'; 
-const TEXT_COLOR = 'text-white';
-const SKIP_COLOR = 'text-green-900/80 hover:text-green-900'; 
+// Couleurs vives et contrastées pour l'engagement des enfants
+const PRIMARY_COLOR = 'bg-green-700'; // Vert foncé élégant (Connexion)
+const SECONDARY_COLOR = 'bg-lime-500'; // Vert clair vif (Boutons, Confirmation)
+const TERTIARY_COLOR = 'bg-yellow-400'; // Jaune solaire (Inscription Étape 1)
+const QUATERNARY_COLOR = 'bg-teal-500'; // Bleu-vert frais (Inscription Étape 2)
+const TEXT_COLOR_LIGHT = 'text-white';
+const TEXT_COLOR_DARK = 'text-gray-900';
 
-// Icônes personnalisées pour les étapes
-const Step1Illustration = User; 
-const Step2Illustration = Mail; 
-const Step3Illustration = CheckCircle; 
+// Icônes Thématiques pour les documents d'état
+const SignInIllustration = Heart; // Pour une touche amicale à la connexion
+const Step1Illustration = ScrollText; // S'enregistrer (document)
+const Step2Illustration = Lock; // Sécurité (mot de passe)
+const Step3Illustration = Award; // Succès / Confirmation
 
 // --- Composant d'Indicateur de Progression ---
 const ProgressIndicator = ({ currentStep, totalSteps = 3 }: { currentStep: number, totalSteps?: number }) => (
@@ -37,31 +39,31 @@ const ProgressIndicator = ({ currentStep, totalSteps = 3 }: { currentStep: numbe
 );
 
 // --- Composant Pied de Page de Navigation (Retour/Suivant) ---
-// Rendu ajusté pour ne pas afficher "Retour" à l'étape 1 du wizard
 const NavFooter = ({ onBack, onNext, isNextDisabled = false, nextText = "Suivant", step, currentTextColor, loading }: any) => {
-    // Détermine si le bouton est un submit natif ou un bouton React
     const ButtonComponent = onNext.type === 'submit' ? 'button' : Button;
     
     return (
         <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-between">
+            {/* Bouton Retour uniquement à partir de l'étape 2 */}
             {step > 1 && (
                 <Button 
                     onClick={onBack} 
                     variant="link" 
-                    className={`${currentTextColor} opacity-80 hover:opacity-100 font-bold`}
+                    className={`${currentTextColor} opacity-80 hover:opacity-100 font-bold transition-all duration-300`}
                     disabled={loading}
                 >
                     <ArrowLeft className="mr-1 h-4 w-4" /> Retour
                 </Button>
             )}
+            {/* Bouton Suivant/S'inscrire stylisé et flottant */}
             <div className={step === 1 ? 'w-full flex justify-end' : ''}>
                 <ButtonComponent 
                     onClick={onNext.type === 'submit' ? undefined : onNext} 
                     type={onNext.type === 'submit' ? 'submit' : 'button'}
-                    className={`text-sm font-bold bg-white text-green-600 hover:bg-gray-100/90 transition-colors shadow-lg rounded-full px-6 py-2`}
+                    className={`text-base font-extrabold ${SECONDARY_COLOR} hover:bg-lime-400 text-green-900 transition-all duration-300 shadow-xl rounded-full px-8 py-3 ${loading ? '' : 'hover:scale-105 active:scale-95'}`}
                     disabled={isNextDisabled || loading}
                 >
-                    {loading && nextText.includes('...') ? <Loader2 className="h-4 w-4 animate-spin" /> : nextText}
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : nextText}
                 </ButtonComponent>
             </div>
         </div>
@@ -85,18 +87,18 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
     // Définir les couleurs de fond de l'étape
     const stepBackgroundColor = useMemo(() => {
         if (step === 1) return TERTIARY_COLOR;
-        if (step === 2) return PRIMARY_COLOR;
+        if (step === 2) return QUATERNARY_COLOR;
         if (step === 3) return SECONDARY_COLOR;
         return 'bg-gray-100';
     }, [step]);
     
-    // Définir la couleur du texte et des icônes pour chaque étape
+    // Définir la couleur du texte
     const currentTextColor = useMemo(() => {
-        if (step === 1) return 'text-gray-900';
-        return TEXT_COLOR;
+        if (step === 1) return TEXT_COLOR_DARK;
+        return TEXT_COLOR_LIGHT;
     }, [step]);
-
-    // Étape 1 à 2
+    
+    // ... Logique de soumission (inchangée) ...
     const handleStep1Submit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -111,7 +113,6 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
         setStep(2);
     };
 
-    // Étape 2 (Inscription Finale)
     const handleFinalSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -122,9 +123,7 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
             setLoading(false);
             return;
         }
-
         let authIdentifier = contactType === 'email' ? contact : `phone_${contact}@app.com`; 
-
         const { error: authError } = await signUp(authIdentifier, password);
         
         if (authError) {
@@ -135,37 +134,40 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
             setStep(3); 
             toast({ title: "Inscription réussie", description: "Veuillez vérifier votre email/téléphone." });
         }
-        
         setLoading(false);
     };
+
 
     // --- Rendu des étapes ---
     
     const renderStep1 = () => (
-        <form onSubmit={handleStep1Submit} className="flex flex-col h-full p-8">
+        <form onSubmit={handleStep1Submit} className="flex flex-col h-full p-8 transition-colors duration-500">
             <div className="flex justify-end">
-                {/* Lien pour basculer vers la connexion */}
-                <Button variant="link" onClick={() => setMode('signin')} className={`${SKIP_COLOR} font-semibold`}>
+                <Button variant="link" onClick={() => setMode('signin')} className={`${TEXT_COLOR_DARK} opacity-80 hover:opacity-100 font-semibold`}>
                     Connectez-vous
                 </Button>
             </div>
             
             <div className={`flex-1 flex flex-col justify-center items-center text-center ${currentTextColor}`}>
-                <div className="p-4 rounded-full bg-white/30 mb-8">
-                    <Step1Illustration className="h-24 w-24 text-white" />
+                {/* Icône animée */}
+                <div className="p-6 rounded-full bg-white/40 mb-8 animate-pulse">
+                    <Step1Illustration className="h-28 w-28 text-white" />
                 </div>
-                <h2 className="text-4xl font-extrabold mb-4">Vos coordonnées</h2>
+                <h2 className="text-4xl font-extrabold mb-4">
+                    Commençons l'enregistrement !
+                </h2>
                 <ProgressIndicator currentStep={1} />
             </div>
             
             <div className="space-y-4 mb-20">
-                <Input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Prénom" className="h-12 text-lg shadow-md border-0 focus:ring-2 focus:ring-green-600" required />
-                <Input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nom" className="h-12 text-lg shadow-md border-0 focus:ring-2 focus:ring-green-600" required />
+                {/* Inputs stylisés pour la clarté */}
+                <Input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Prénom de l'enfant" className="h-14 text-lg shadow-lg border-0 focus:ring-4 focus:ring-green-600 focus:border-transparent transition-all duration-300" required />
+                <Input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nom de famille" className="h-14 text-lg shadow-lg border-0 focus:ring-4 focus:ring-green-600 focus:border-transparent transition-all duration-300" required />
                 <div className="flex space-x-2">
-                    <Button type="button" onClick={() => setContactType('email')} className={`flex-1 h-12 ${contactType === 'email' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}> <Mail className="mr-2 h-5 w-5" /> Email </Button>
-                    <Button type="button" onClick={() => setContactType('phone')} className={`flex-1 h-12 ${contactType === 'phone' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}> <Smartphone className="mr-2 h-5 w-5" /> Téléphone </Button>
+                    <Button type="button" onClick={() => setContactType('email')} className={`flex-1 h-12 text-base font-bold ${contactType === 'email' ? PRIMARY_COLOR : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}> <Mail className="mr-2 h-5 w-5" /> Email </Button>
+                    <Button type="button" onClick={() => setContactType('phone')} className={`flex-1 h-12 text-base font-bold ${contactType === 'phone' ? PRIMARY_COLOR : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}> <Smartphone className="mr-2 h-5 w-5" /> Téléphone </Button>
                 </div>
-                <Input type={contactType === 'email' ? 'email' : 'tel'} value={contact} onChange={(e) => setContact(e.target.value)} placeholder={contactType === 'email' ? 'votre@email.com' : '06 00 00 00 00'} className="h-12 text-lg shadow-md border-0 focus:ring-2 focus:ring-green-600" required />
+                <Input type={contactType === 'email' ? 'email' : 'tel'} value={contact} onChange={(e) => setContact(e.target.value)} placeholder={contactType === 'email' ? 'Contact parent (email)' : 'Contact parent (téléphone)'} className="h-14 text-lg shadow-lg border-0 focus:ring-4 focus:ring-green-600 focus:border-transparent transition-all duration-300" required />
             </div>
             
             {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -175,23 +177,27 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
     );
 
     const renderStep2 = () => (
-        <form onSubmit={handleFinalSignUp} className="flex flex-col h-full p-8">
+        <form onSubmit={handleFinalSignUp} className="flex flex-col h-full p-8 transition-colors duration-500">
             <div className="flex justify-end">
-                 {/* Lien pour basculer vers la connexion */}
-                <Button variant="link" onClick={() => setMode('signin')} className={`${TEXT_COLOR} opacity-70 hover:opacity-100 font-semibold`}> Connectez-vous </Button>
+                <Button variant="link" onClick={() => setMode('signin')} className={`${TEXT_COLOR_LIGHT} opacity-70 hover:opacity-100 font-semibold`}> Connectez-vous </Button>
             </div>
             
             <div className={`flex-1 flex flex-col justify-center items-center text-center ${currentTextColor}`}>
-                <div className="p-4 rounded-full bg-white/30 mb-8">
-                    <Step2Illustration className="h-24 w-24 text-white" />
+                 {/* Icône animée */}
+                <div className="p-6 rounded-full bg-white/40 mb-8 animate-bounce">
+                    <Step2Illustration className="h-28 w-28 text-white" />
                 </div>
-                <h2 className="text-4xl font-extrabold mb-4">Créer un mot de passe</h2>
-                <p className="text-lg opacity-80">Pour protéger votre compte lié à <span className="font-bold">{contact}</span>.</p>
+                <h2 className="text-4xl font-extrabold mb-4">
+                    Un mot de passe secret
+                </h2>
+                <p className="text-lg opacity-90">
+                    Protégeons les informations de {firstName}.
+                </p>
                 <ProgressIndicator currentStep={2} />
             </div>
             
             <div className="space-y-4 mb-20">
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe (minimum 6 caractères)" className="h-12 text-lg shadow-md border-0 focus:ring-2 focus:ring-green-600" minLength={6} required />
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe (minimum 6 caractères)" className="h-14 text-lg shadow-lg border-0 focus:ring-4 focus:ring-lime-400 focus:border-transparent transition-all duration-300" minLength={6} required />
             </div>
 
             {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -202,36 +208,38 @@ const SignUpWizard = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => voi
                 onBack={() => setStep(1)} 
                 onNext={{type: 'submit'}} 
                 isNextDisabled={!password || password.length < 6}
-                nextText={loading ? "Inscription..." : "S'inscrire"}
+                nextText={loading ? "Inscription..." : "Créer le compte"}
                 loading={loading}
             />
         </form>
     );
     
     const renderStep3 = () => (
-        <div className="flex flex-col h-full p-8 text-white">
+        <div className="flex flex-col h-full p-8 text-white transition-colors duration-500">
             <div className="flex-1 flex flex-col justify-center items-center text-center">
-                <div className="p-4 rounded-full bg-white/30 mb-8">
-                    <Step3Illustration className="h-24 w-24 text-white" />
+                {/* Icône animée de succès */}
+                <div className="p-6 rounded-full bg-white/40 mb-8 animate-pulse delay-500">
+                    <Step3Illustration className="h-28 w-28 text-white" />
                 </div>
-                <h2 className="text-4xl font-extrabold mb-4">Inscription Réussie !</h2>
-                <p className="text-lg opacity-90 mb-8">Un email de confirmation a été envoyé à {contact}.</p>
+                <h2 className="text-4xl font-extrabold mb-4">
+                    Bravo ! C'est confirmé !
+                </h2>
+                <p className="text-lg opacity-90 mb-8">
+                    Votre enregistrement est presque terminé. Vérifiez votre email/téléphone pour valider.
+                </p>
                 <ProgressIndicator currentStep={3} />
             </div>
 
             <div className="mb-4 flex flex-col items-center">
-                <Button onClick={() => navigate('/dashboard')} className={`w-full max-w-sm h-12 text-lg font-bold bg-white text-green-600 hover:bg-gray-100/90 transition-colors shadow-lg rounded-full`}>
-                    Aller au Tableau de Bord
-                </Button>
-                <Button variant="link" onClick={() => { toast({ title: "Renvoyé", description: "Email de confirmation renvoyé." }); }} className="mt-4 text-white/80 hover:text-white">
-                    Renvoyer l'email
+                <Button onClick={() => navigate('/dashboard')} className={`w-full max-w-sm h-14 text-xl font-bold ${PRIMARY_COLOR} hover:bg-green-800 transition-colors shadow-2xl rounded-full hover:scale-[1.02] active:scale-[0.98]`}>
+                    Accéder aux Documents
                 </Button>
             </div>
         </div>
     );
 
     return (
-        <div className={`min-h-screen ${stepBackgroundColor} transition-colors duration-500 flex flex-col`}>
+        <div className={`min-h-screen ${stepBackgroundColor} transition-colors duration-500 flex flex-col overflow-hidden`}>
             <div className="flex-1 max-w-md w-full mx-auto relative">
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
@@ -270,22 +278,26 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
     };
 
     return (
-        <div className={`min-h-screen ${PRIMARY_COLOR} transition-colors duration-500 flex flex-col`}>
+        <div className={`min-h-screen ${PRIMARY_COLOR} transition-colors duration-500 flex flex-col overflow-hidden`}>
             <div className="flex-1 max-w-md w-full mx-auto p-8 relative">
                 <div className="flex justify-end">
-                    {/* Lien pour basculer vers l'inscription (Sign Up) */}
+                    {/* Lien pour basculer vers l'inscription */}
                     <Button 
                         variant="link" 
                         onClick={() => setMode('signup')}
-                        className={`${TEXT_COLOR} opacity-70 hover:opacity-100 font-semibold`}
+                        className={`${TEXT_COLOR_LIGHT} opacity-70 hover:opacity-100 font-semibold`}
                     >
                         S'inscrire
                     </Button>
                 </div>
 
-                <div className={`flex-1 flex flex-col justify-center items-center text-center ${TEXT_COLOR} pt-12`}>
+                <div className={`flex-1 flex flex-col justify-center items-center text-center ${TEXT_COLOR_LIGHT} pt-12`}>
+                    {/* Icône animée de connexion */}
+                    <div className="p-6 rounded-full bg-white/40 mb-8 animate-pulse">
+                        <SignInIllustration className="h-28 w-28 text-white" />
+                    </div>
                     <h2 className="text-5xl font-extrabold mb-12">
-                        Connexion
+                        Bienvenue !
                     </h2>
                     
                     <form onSubmit={handleSignIn} className="w-full space-y-6">
@@ -294,7 +306,7 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Email"
-                            className="h-14 text-lg shadow-lg border-0 focus:ring-2 focus:ring-lime-400"
+                            className="h-14 text-lg shadow-lg border-0 focus:ring-4 focus:ring-lime-400 focus:border-transparent transition-all duration-300"
                             required
                         />
                         <Input
@@ -302,7 +314,7 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Mot de passe"
-                            className="h-14 text-lg shadow-lg border-0 focus:ring-2 focus:ring-lime-400"
+                            className="h-14 text-lg shadow-lg border-0 focus:ring-4 focus:ring-lime-400 focus:border-transparent transition-all duration-300"
                             required
                         />
 
@@ -312,20 +324,20 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
                             </Alert>
                         )}
                         
-                        {/* Bouton de connexion en vert clair (couleur secondaire) */}
+                        {/* Bouton de connexion stylisé en vert clair avec animation */}
                         <Button 
                             type="submit" 
-                            className={`w-full h-12 text-lg font-bold ${SECONDARY_COLOR} hover:bg-lime-400 text-green-900 transition-colors shadow-lg rounded-full`} 
+                            className={`w-full h-14 text-xl font-bold ${SECONDARY_COLOR} hover:bg-lime-400 text-green-900 transition-all duration-300 shadow-2xl rounded-full ${loading ? '' : 'hover:scale-[1.02] active:scale-95 animate-bounce'}`}
                             disabled={loading}
                         >
-                            {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Se connecter"}
+                            {loading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Se connecter"}
                         </Button>
                     </form>
                     
                     <Button 
                         variant="link" 
                         onClick={() => { /* Logique mot de passe oublié */ }}
-                        className="mt-6 text-white/80 hover:text-white"
+                        className="mt-6 text-white/80 hover:text-white transition-colors"
                     >
                         Mot de passe oublié ?
                     </Button>
@@ -338,7 +350,7 @@ const SignInForm = ({ setMode }: { setMode: (mode: 'signin' | 'signup') => void 
                         <Button 
                             variant="link" 
                             onClick={() => setMode('signup')}
-                            className="text-white font-bold p-0 h-auto underline"
+                            className="text-white font-extrabold p-0 h-auto underline transition-colors"
                         >
                             Créer un compte
                         </Button>
