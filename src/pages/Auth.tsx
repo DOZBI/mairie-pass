@@ -1,5 +1,3 @@
-// src/pages/Auth.tsx (version modifiée)
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { signIn, user } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -47,6 +45,31 @@ const Auth = () => {
         description: "Vous êtes maintenant connecté.",
       });
       navigate('/dashboard');
+    }
+    
+    setLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const { error } = await signUp(email, password);
+    
+    if (error) {
+      setError(error.message);
+      toast({
+        variant: "destructive",
+        title: "Erreur d'inscription",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Inscription réussie",
+        description: "Veuillez vérifier votre email pour confirmer votre compte.",
+      });
+      navigate('/profile-setup');
     }
     
     setLoading(false);
@@ -105,12 +128,40 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="signup">
-              <div className="text-center space-y-4 py-6">
-                <p>Nouveau sur la plateforme ?</p>
-                <Button className="w-full" onClick={() => navigate('/signup')}>
-                  Créer un compte
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="votre@email.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Mot de passe</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    minLength={6}
+                  />
+                </div>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  S'inscrire
                 </Button>
-              </div>
+              </form>
             </TabsContent>
           </Tabs>
         </CardContent>
