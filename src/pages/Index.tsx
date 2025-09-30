@@ -36,16 +36,11 @@ const Index = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <div className="max-w-md mx-auto bg-background/80 backdrop-blur-sm min-h-screen">
-        {/* Header - Style WhatsApp */}
-        <div className="flex justify-between items-center p-6 bg-card border-b border-border/50">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <h1 className="text-xl font-bold text-foreground">Services</h1>
-          </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-md mx-auto bg-background">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6">
+          <h1 className="text-2xl font-bold text-foreground">Services</h1>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
             <LogOut className="h-5 w-5" />
           </Button>

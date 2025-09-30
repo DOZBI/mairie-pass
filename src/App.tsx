@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+// src/App.tsx (version modifiée)
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,27 +13,9 @@ import ProfileSetup from "./pages/ProfileSetup";
 import DocumentRequests from "./pages/DocumentRequests";
 import MyRequests from "./pages/MyRequests";
 import NotFound from "./pages/NotFound";
-import SignUp from "./pages/SignUp";
-
+import SignUp from "./pages/SignUp"; // Importez la nouvelle page
 
 const queryClient = new QueryClient();
-
-const AppContent = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/dashboard" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/profile-setup" element={<ProfileSetup />} />
-        <Route path="/documents" element={<DocumentRequests />} />
-        <Route path="/my-requests" element={<MyRequests />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  );
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -40,7 +23,19 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <AppContent />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/dashboard" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/signup" element={<SignUp />} /> {/* Ajoutez la nouvelle route */}
+            <Route path="/profile-setup" element={<ProfileSetup />} />
+            <Route path="/documents" element={<DocumentRequests />} />
+            <Route path="/my-requests" element={<MyRequests />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

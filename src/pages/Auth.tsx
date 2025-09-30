@@ -1,33 +1,21 @@
+// src/pages/Auth.tsx (version modifiée)
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Globe, Loader2, MessageCircle, Phone, Video } from 'lucide-react';
-
-// Composant de l'icône WhatsApp stylisée (simplifiée)
-const WhatsAppIconPattern = () => (
-  <div className="relative w-48 h-48 mx-auto my-8 flex items-center justify-center">
-    {/* Un cercle vert avec une icône de message simple pour simuler le motif */}
-    <div className="relative w-40 h-40 rounded-full bg-green-50/50 flex items-center justify-center">
-      <div className="w-32 h-32 rounded-full bg-green-100/70 flex items-center justify-center">
-        <MessageCircle className="h-10 w-10 text-green-600" />
-      </div>
-      {/* Simulation des petites icônes autour */}
-      <Phone className="absolute top-0 right-8 h-4 w-4 text-green-500 transform rotate-12" />
-      <Video className="absolute bottom-4 left-4 h-4 w-4 text-green-500 transform -rotate-24" />
-      <Globe className="absolute top-10 left-0 h-4 w-4 text-green-500 transform -rotate-45" />
-    </div>
-  </div>
-);
-
 
 const Auth = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  // *** NOUVEL ÉTAT POUR LA TRANSITION DE SORTIE ***
-  const [isExiting, setIsExiting] = useState(false); 
-  // ------------------------------------------------
   const [error, setError] = useState('');
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
@@ -39,79 +27,96 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  // FONCTION MODIFIÉE : Lance l'animation de sortie AVANT de naviguer
-  const handleAgreeAndContinue = () => {
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    // *** Déclenche l'animation de sortie ***
-    setIsExiting(true); 
-    // --------------------------------------
-    
-    // Simuler le délai d'animation (doit correspondre à la durée dans le CSS : 500ms)
-    const transitionDuration = 500; 
+    setError('');
 
-    setTimeout(() => {
-      setLoading(false);
-      
-      // *** Navigation après la fin de la transition ***
-      navigate('/signup'); 
-      
-    }, transitionDuration); 
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      setError(error.message);
+      toast({
+        variant: "destructive",
+        title: "Erreur de connexion",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Connexion réussie",
+        description: "Vous êtes maintenant connecté.",
+      });
+      navigate('/dashboard');
+    }
+    
+    setLoading(false);
   };
 
   return (
-    // Conteneur plein écran, centré
-    // *** AJOUT DE LA CLASSE DYNAMIQUE ET DE LA CLASSE DE BASE POUR L'ANIMATION ***
-    <div className={`min-h-screen flex flex-col items-center justify-between bg-white p-6 pt-20 pb-10 text-center transition-transform duration-500 ease-in-out ${isExiting ? 'slide-out-left' : 'slide-in-right'}`}>
-      
-      {/* Header (vide ou minimaliste pour correspondre à l'image) */}
-      <div></div>
-
-      {/* Contenu Central : Illustration et Texte (inchangé) */}
-      <div className="flex flex-col items-center">
-        
-        {/* L'illustration/Icône stylisée */}
-        <WhatsAppIconPattern />
-
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Bienvenue sur Foutadocument
-        </h1>
-
-        <p className="text-sm text-gray-600 px-4 max-w-sm">
-          Lisez notre{' '}
-          <a href="/privacy" className="text-green-600 hover:text-green-700 font-semibold underline">
-            Politique de confidentialité
-          </a>
-          . Tapotez "J'accepte et continuer" pour accepter les{' '}
-          <a href="/terms" className="text-green-600 hover:text-green-700 font-semibold underline">
-            Conditions d'utilisation
-          </a>
-          .
-        </p>
-
-      </div>
-
-      {/* Pied de Page : Bouton et Choix de Langue (inchangé) */}
-      <div className="w-full max-w-sm px-4 space-y-6">
-        {/* Bouton Vert Principal */}
-        <Button 
-          onClick={handleAgreeAndContinue}
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-12 rounded-full text-base"
-          disabled={loading}
-        >
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          J'accepte et continuer
-        </Button>
-
-        {/* Choix de Langue (simulé) */}
-        <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-          <Globe className="h-4 w-4" />
-          <span>Français (France)</span>
-        </div>
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">Mairie - Documents</CardTitle>
+          <CardDescription>
+            Connectez-vous pour accéder aux services d'état civil
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Connexion</TabsTrigger>
+              <TabsTrigger value="signup">Inscription</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="signin">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="votre@email.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">Mot de passe</Label>
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                  />
+                </div>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Se connecter
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <div className="text-center space-y-4 py-6">
+                <p>Nouveau sur la plateforme ?</p>
+                <Button className="w-full" onClick={() => navigate('/signup')}>
+                  Créer un compte
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
 export default Auth;
-          
