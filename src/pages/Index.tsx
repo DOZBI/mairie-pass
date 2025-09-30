@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Users, Shield, LogOut, ShoppingBag, Plus, BookOpen, Clock, Zap } from 'lucide-react';
-// Simuler des données de demandes en cours pour le compteur du panier
-const DEMANDES_EN_COURS = 2; // Remplacer par un state ou un hook réel
+import { FileText, Users, Shield, LogOut } from 'lucide-react';
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -13,55 +11,22 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading && !user) {
-      // Redirection vers la page d'authentification si non connecté
-      navigate('/auth');
+      navigate('/');
     }
   }, [user, loading, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/'); // Rediriger vers l'écran d'accueil ou de connexion
+    navigate('/auth');
   };
 
-  // Icônes et services stylisés pour la grille
-  const services = [
-    { 
-      title: "Acte de Naissance", 
-      price: "1500 XOF", 
-      icon: BookOpen, 
-      onClick: () => navigate('/documents/naissance') 
-    },
-    { 
-      title: "Casier Judiciaire", 
-      price: "2000 XOF", 
-      icon: Shield, 
-      onClick: () => navigate('/documents/casier') 
-    },
-    { 
-      title: "Mariage/PACS", 
-      price: "1800 XOF", 
-      icon: Heart, 
-      onClick: () => navigate('/documents/mariage') 
-    },
-    { 
-      title: "Certificat de Vie", 
-      price: "1000 XOF", 
-      icon: Users, 
-      onClick: () => navigate('/documents/vie') 
-    },
-  ];
-
   if (loading) {
-    // Squelette de chargement minimaliste
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 w-40 bg-neutral-200 rounded-lg mb-8 mx-auto"></div>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="h-60 w-40 bg-neutral-200 rounded-[2rem]"></div>
-                <div className="h-60 w-40 bg-neutral-200 rounded-[2rem]"></div>
-            </div>
+          <div className="animate-pulse">
+            <div className="h-8 w-48 bg-muted rounded mb-4 mx-auto"></div>
+            <div className="h-4 w-64 bg-muted rounded mx-auto"></div>
           </div>
         </div>
       </div>
@@ -71,128 +36,113 @@ const Index = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="container mx-auto max-w-lg px-4 pt-8 pb-4">
-        
-        {/* En-tête (Dresses) */}
-        <header className="flex justify-between items-start mb-6">
-          <h1 className="text-4xl font-extrabold text-neutral-900 font-serif">
-            Services
-          </h1>
-          
-          {/* Icône du Panier/Demandes en Cours (Similaire à l'image) */}
-          <div className="relative">
-            <Button 
-              variant="outline" 
-              className="w-12 h-12 rounded-xl border-neutral-300 bg-white shadow-md hover:bg-neutral-100"
-              onClick={() => navigate('/my-requests')}
-              title="Mes demandes en cours"
-            >
-              <ShoppingBag className="h-6 w-6 text-neutral-800" />
-            </Button>
-            {DEMANDES_EN_COURS > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                {DEMANDES_EN_COURS}
-              </span>
-            )}
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Mairie - Services en ligne</h1>
+            <p className="text-sm text-muted-foreground">Documents d'état civil</p>
           </div>
-        </header>
-
-        {/* Barre de tri/filtre (Sort by) */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="text-neutral-600 font-semibold flex items-center">
-            <Clock className="h-4 w-4 mr-1" />
-            <p className="text-sm">Demandes : {DEMANDES_EN_COURS} en cours</p>
-          </div>
-          <Button 
-             variant="ghost" 
-             className="text-neutral-600 hover:bg-neutral-100 text-sm font-semibold"
-             onClick={handleSignOut}
-          >
-             <LogOut className="mr-1 h-4 w-4" />
-             Quitter
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Déconnexion
           </Button>
         </div>
+      </header>
 
-        {/* Grille des Services (Produits) */}
-        <div className="grid grid-cols-2 gap-4">
-          
-          {services.map((service, index) => (
-            <Card 
-              key={index}
-              className={`
-                bg-white 
-                rounded-[2rem] 
-                overflow-hidden 
-                shadow-xl 
-                transition-all 
-                duration-300 
-                border-none
-                ${index === 1 ? 'relative transform translate-y-2 shadow-2xl z-10' : ''} 
-                cursor-pointer
-                hover:scale-[1.03]
-              `}
-              onClick={service.onClick}
-            >
-              {/* Zone d'Image/Illustration */}
-              <div className={`
-                 h-40 w-full 
-                 flex items-center justify-center 
-                 bg-neutral-100 
-                 ${index === 1 ? 'bg-green-100/70' : 'bg-neutral-100'} 
-                 rounded-[2rem] p-4
-              `}>
-                 <service.icon className={`h-16 w-16 ${index === 1 ? 'text-green-700 animate-pulse' : 'text-neutral-500'}`} />
-              </div>
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold mb-2">Bienvenue, {user.email}</h2>
+          <p className="text-muted-foreground">
+            Accédez aux services de demande de documents d'état civil de manière sécurisée
+          </p>
+        </div>
 
-              {/* Détails du Service (Nom et Prix) */}
-              <div className="p-4 pt-3 space-y-1">
-                <CardTitle className="text-base font-bold text-neutral-900">
-                  {service.title}
-                </CardTitle>
-                <CardDescription className="text-sm font-semibold text-neutral-500">
-                  {service.price}
-                </CardDescription>
-                
-                {/* Bouton Plus/Ajouter (similaire à l'icône de l'image) */}
-                <div className={`absolute bottom-4 right-4 ${index === 1 ? 'block' : 'hidden md:block'}`}>
-                    <Button 
-                        size="icon" 
-                        className="h-8 w-8 rounded-full bg-green-600 hover:bg-green-700 shadow-lg text-white"
-                    >
-                        <Plus className="h-4 w-4" />
-                    </Button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer" 
+            onClick={() => navigate('/documents')}
+          >
+            <CardHeader>
+              <FileText className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Demander un document</CardTitle>
+              <CardDescription>
+                Acte de naissance, casier judiciaire et autres documents officiels
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full">
+                Faire une demande
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/my-requests')}
+          >
+            <CardHeader>
+              <Users className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Mes demandes</CardTitle>
+              <CardDescription>
+                Suivre l'état de vos demandes en cours et télécharger vos documents
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" variant="outline">
+                Voir mes demandes
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <Shield className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Mon profil</CardTitle>
+              <CardDescription>
+                Gérer vos informations personnelles et documents d'identité
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" variant="outline">
+                Modifier le profil
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-12">
+          <Card>
+            <CardHeader>
+              <CardTitle>Comment ça marche?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                <div className="space-y-2">
+                  <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto font-bold">1</div>
+                  <h3 className="font-semibold">Choisissez</h3>
+                  <p className="text-sm text-muted-foreground">Sélectionnez le document désiré</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto font-bold">2</div>
+                  <h3 className="font-semibold">Remplissez</h3>
+                  <p className="text-sm text-muted-foreground">Complétez le formulaire requis</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto font-bold">3</div>
+                  <h3 className="font-semibold">Payez</h3>
+                  <p className="text-sm text-muted-foreground">Réglez via Mobile Money</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto font-bold">4</div>
+                  <h3 className="font-semibold">Recevez</h3>
+                  <p className="text-sm text-muted-foreground">Téléchargez votre document</p>
                 </div>
               </div>
-            </Card>
-          ))}
-          
+            </CardContent>
+          </Card>
         </div>
-        
-        {/* Carte secondaire pour le profil ou l'aide (simule la 3ème/4ème carte de l'image) */}
-        <div className="mt-8">
-             <Card 
-                className="flex items-center justify-between p-6 rounded-3xl shadow-lg border-neutral-200 hover:shadow-xl transition-shadow cursor-pointer bg-white"
-                onClick={() => navigate('/profile')}
-            >
-                <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-neutral-100 rounded-xl">
-                        <Shield className="h-6 w-6 text-neutral-600" />
-                    </div>
-                    <div>
-                        <CardTitle className="text-lg font-bold">Mon Profil Sécurisé</CardTitle>
-                        <CardDescription>Mettez à jour vos infos et justificatifs.</CardDescription>
-                    </div>
-                </div>
-                <Zap className="h-5 w-5 text-neutral-500" />
-            </Card>
-        </div>
-        
-        <div className="text-center mt-10 text-sm text-neutral-500">
-            Connecté en tant que **{user.email}**
-        </div>
-
-      </div>
+      </main>
     </div>
   );
 };
