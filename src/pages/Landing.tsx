@@ -9,7 +9,7 @@ const Landing = () => {
   // >>> INTÉGRATION DU NOM DE LA VIDÉO ICI <<<
   // Placez votre fichier vidéo dans le dossier 'public' de votre projet
   // et mettez son nom de fichier ici (ex: /mairie-intro.mp4, /mon-gif-video.webm)
-  const videoSource = "/mairie-intro.mp4"; 
+  const videoSource = "5GKS3V6YYjuTgm9Kv8.mp4"; 
   // ***************************************************************
 
   return (
