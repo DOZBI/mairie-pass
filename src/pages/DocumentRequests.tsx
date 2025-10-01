@@ -1,122 +1,115 @@
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { ArrowLeft, FileText, Shield, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { FileText, Shield, Baby } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import DocumentRequestForm from '@/components/DocumentRequestForm';
 
 const DocumentRequests = () => {
-  const { user } = useAuth();
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string | null>(null);
-
-  if (!user) {
-    return <div>Vous devez être connecté pour accéder à cette page.</div>;
-  }
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
 
   const documentTypes = [
     {
-      id: 'birth_certificate_extract',
+      type: 'birth_certificate_extract',
       title: 'Extrait d\'acte de naissance',
-      description: 'Document officiel pour justifier de votre état civil',
-      icon: Baby,
-      price: 'Gratuit',
-      processingTime: '2-3 jours ouvrables'
+      description: 'Document officiel certifiant votre naissance',
+      icon: User,
     },
     {
-      id: 'birth_certificate_full',
-      title: 'Copie intégrale d\'acte de naissance',
-      description: 'Document complet avec filiation pour démarches administratives',
+      type: 'birth_certificate_full',
+      title: 'Acte de naissance complet',
+      description: 'Document complet avec toutes les informations de naissance',
       icon: FileText,
-      price: '5€',
-      processingTime: '3-5 jours ouvrables'
     },
     {
-      id: 'criminal_record',
-      title: 'Casier judiciaire (bulletin n°3)',
-      description: 'Extrait de casier judiciaire pour emploi ou concours',
+      type: 'criminal_record',
+      title: 'Extrait de casier judiciaire',
+      description: 'Certificat de bonne conduite et moralité',
       icon: Shield,
-      price: 'Gratuit',
-      processingTime: '5-7 jours ouvrables'
-    }
+    },
   ];
 
-  if (selectedDocumentType) {
+  const handleDocumentSelect = (documentType: string) => {
+    setSelectedDocument(documentType);
+  };
+
+  const handleSuccess = () => {
+    setSelectedDocument(null);
+  };
+
+  const handleBack = () => {
+    setSelectedDocument(null);
+  };
+
+  if (selectedDocument) {
+    const selectedDoc = documentTypes.find(doc => doc.type === selectedDocument);
+    
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+      <div className="container mx-auto p-4 max-w-2xl">
+        <div className="mb-6">
           <Button 
-            variant="outline" 
-            onClick={() => setSelectedDocumentType(null)}
-            className="mb-6"
+            variant="ghost" 
+            onClick={handleBack}
+            className="mb-4"
           >
-            ← Retour aux demandes
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour
           </Button>
-          <DocumentRequestForm 
-            documentType={selectedDocumentType}
-            onSuccess={() => setSelectedDocumentType(null)}
-          />
+          <h1 className="text-2xl font-bold text-foreground">
+            Demande de {selectedDoc?.title}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            {selectedDoc?.description}
+          </p>
         </div>
+
+        <DocumentRequestForm 
+          documentType={selectedDocument}
+          onSuccess={handleSuccess}
+        />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-4">Demandes de documents</h1>
-          <p className="text-muted-foreground">
-            Sélectionnez le type de document que vous souhaitez demander
-          </p>
-        </div>
+    <div className="container mx-auto p-4 max-w-4xl">
+      <div className="mb-8">
+        <Link to="/">
+          <Button variant="ghost" className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour au tableau de bord
+          </Button>
+        </Link>
+        <h1 className="text-3xl font-bold text-foreground">Demander un document</h1>
+        <p className="text-muted-foreground mt-2">
+          Sélectionnez le type de document que vous souhaitez demander
+        </p>
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {documentTypes.map((docType) => {
-            const Icon = docType.icon;
-            return (
-              <Card key={docType.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-                    <Icon className="h-8 w-8 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">{docType.title}</CardTitle>
-                  <CardDescription className="text-sm">
-                    {docType.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Prix :</span>
-                      <Badge variant="secondary">{docType.price}</Badge>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Délai :</span>
-                      <span className="font-medium">{docType.processingTime}</span>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={() => setSelectedDocumentType(docType.id)}
-                    className="w-full"
-                  >
-                    Demander ce document
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="mt-12 p-6 bg-muted/50 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Informations importantes</h2>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Tous les documents sont délivrés au format PDF sécurisé</li>
-            <li>• Une notification vous sera envoyée dès que votre document est prêt</li>
-            <li>• Les documents gratuits peuvent être demandés une fois par mois</li>
-            <li>• Un justificatif d'identité valide est requis pour toute demande</li>
-          </ul>
-        </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {documentTypes.map((doc) => {
+          const IconComponent = doc.icon;
+          return (
+            <Card 
+              key={doc.type}
+              className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 border-border"
+              onClick={() => handleDocumentSelect(doc.type)}
+            >
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                  <IconComponent className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-foreground">{doc.title}</CardTitle>
+                <CardDescription>{doc.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" variant="outline">
+                  Demander ce document
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
