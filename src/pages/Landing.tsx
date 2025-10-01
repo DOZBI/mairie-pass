@@ -5,11 +5,14 @@ import { useNavigate } from 'react-router-dom';
 const Landing = () => {
   const navigate = useNavigate();
 
-  // Assurez-vous que votre vidéo est bien dans le dossier 'public'
+  // ***************************************************************
+  // >>> INTÉGRATION DU NOM DE LA VIDÉO ICI <<<
+  // Placez votre fichier vidéo dans le dossier 'public' de votre projet
+  // et mettez son nom de fichier ici (ex: /mairie-intro.mp4, /mon-gif-video.webm)
   const videoSource = "/mairie-intro.mp4"; 
+  // ***************************************************************
 
   return (
-    // Utilisez bg-background ou une couleur unie claire si vous voulez un look encore plus épuré (par exemple bg-white si vous utilisez Tailwind par défaut)
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
 
       {/* Main Content Centered */}
@@ -23,13 +26,11 @@ const Landing = () => {
         {/* Vidéo pour l'effet GIF, sans aucun contour ni ombre */}
         <div className="mb-12 w-full max-w-xs mx-auto">
           <video
-            src={videoSource}
-            // Configuration pour l'effet GIF/intro
+            src={videoSource} // Utilisation de la constante 'videoSource'
             autoPlay 
             loop        
             muted       
             playsInline 
-            // W-full pour prendre la largeur définie par le conteneur, h-auto pour garder les proportions
             className="w-full h-auto" 
           >
             Votre navigateur ne supporte pas le tag vidéo.
@@ -37,11 +38,8 @@ const Landing = () => {
         </div>
 
         {/* Bouton Entrer (vert foncé/noir) */}
-        {/* Style simple, centré, grande taille */}
         <Button
           size="lg"
-          // Classe custom pour un vert très foncé, presque noir (Hex: #004d40)
-          // J'ai rendu le bouton un peu plus compact, mais vous pouvez réaugmenter la taille (px-12 py-8) si vous préférez le style précédent
           className="text-xl px-8 py-4 bg-[#004d40] hover:bg-[#00332c] text-white font-bold transition-colors duration-300"
           onClick={() => navigate('/auth')}
         >
@@ -50,7 +48,7 @@ const Landing = () => {
         </Button>
       </main>
 
-      {/* Footer minimaliste, comme souvent sur les applications mobile/intro */}
+      {/* Footer minimaliste */}
       <footer className="mt-20 text-sm text-muted-foreground absolute bottom-10">
         <p>Propulsé par la Mairie.</p>
       </footer>
