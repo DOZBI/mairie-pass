@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           additional_info: Json | null
           admin_notes: string | null
+          amount: number | null
           created_at: string
           document_type: Database["public"]["Enums"]["document_type"]
           document_url: string | null
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           additional_info?: Json | null
           admin_notes?: string | null
+          amount?: number | null
           created_at?: string
           document_type: Database["public"]["Enums"]["document_type"]
           document_url?: string | null
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           additional_info?: Json | null
           admin_notes?: string | null
+          amount?: number | null
           created_at?: string
           document_type?: Database["public"]["Enums"]["document_type"]
           document_url?: string | null
@@ -61,8 +64,68 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          document_request_id: string
+          error_message: string | null
+          id: string
+          phone_number: string
+          provider: string
+          provider_reference: string | null
+          status: string
+          transaction_reference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          document_request_id: string
+          error_message?: string | null
+          id?: string
+          phone_number: string
+          provider: string
+          provider_reference?: string | null
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          document_request_id?: string
+          error_message?: string | null
+          id?: string
+          phone_number?: string
+          provider?: string
+          provider_reference?: string | null
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_document_request_id_fkey"
+            columns: ["document_request_id"]
+            isOneToOne: false
+            referencedRelation: "document_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          address: string | null
           city_hall_name: string
           created_at: string
           email: string | null
@@ -77,6 +140,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address?: string | null
           city_hall_name: string
           created_at?: string
           email?: string | null
@@ -91,6 +155,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address?: string | null
           city_hall_name?: string
           created_at?: string
           email?: string | null
@@ -124,6 +189,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "completed"
+        | "pending_payment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -262,6 +328,7 @@ export const Constants = {
         "approved",
         "rejected",
         "completed",
+        "pending_payment",
       ],
     },
   },

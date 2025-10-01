@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,7 @@ interface DocumentRequestFormProps {
 const DocumentRequestForm = ({ documentType, onSuccess }: DocumentRequestFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [reason, setReason] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState({
@@ -63,23 +65,30 @@ const DocumentRequestForm = ({ documentType, onSuccess }: DocumentRequestFormPro
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // Create document request with pending_payment status
+      const { data, error } = await supabase
         .from('document_requests')
         .insert([{
           user_id: user.id,
           document_type: documentType as any,
           reason,
-          additional_info: additionalInfo
-        }]);
+          additional_info: additionalInfo,
+          status: 'pending_payment',
+          amount: 5.00
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
 
       toast({
-        title: "Demande envoyée",
-        description: "Votre demande de document a été envoyée avec succès.",
+        title: "Demande créée",
+        description: "Veuillez procéder au paiement pour valider votre demande.",
       });
 
-      onSuccess();
+      // Redirect to payment page
+      navigate(`/payment?requestId=${data.id}`);
+      
     } catch (error: any) {
       toast({
         variant: "destructive",
