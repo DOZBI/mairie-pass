@@ -121,6 +121,13 @@ export type Database = {
             referencedRelation: "document_requests"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       profiles: {

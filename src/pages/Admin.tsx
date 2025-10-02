@@ -94,7 +94,7 @@ const Admin = () => {
     });
   };
 
-  const updateRequestStatus = async (requestId: string, status: string, notes: string) => {
+  const updateRequestStatus = async (requestId: string, status: 'approved' | 'rejected' | 'completed' | 'in_review' | 'pending' | 'pending_payment', notes: string) => {
     const { error } = await supabase
       .from('document_requests')
       .update({ status, admin_notes: notes })
