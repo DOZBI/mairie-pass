@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Users, Shield, LogOut } from 'lucide-react';
+import { FileText, Users, Shield, LogOut, Settings } from 'lucide-react';
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -96,6 +98,21 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">Gérer</p>
             </CardContent>
           </Card>
+
+          {isAdmin && (
+            <Card 
+              className="overflow-hidden hover:shadow-lg transition-all cursor-pointer bg-card border-0 shadow-sm rounded-3xl"
+              onClick={() => navigate('/admin')}
+            >
+              <div className="aspect-square bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+                <Settings className="h-16 w-16 text-red-600" />
+              </div>
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-1">Administration</h3>
+                <p className="text-xs text-muted-foreground">Gestion</p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card 
             className="overflow-hidden hover:shadow-lg transition-all cursor-pointer bg-card border-0 shadow-sm rounded-3xl"
