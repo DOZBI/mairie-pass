@@ -38,8 +38,6 @@ const Payment = () => {
 
       if (error) throw error;
 
-      console.log('Payment status:', data.status);
-
       if (data.status === 'completed') {
         setPaymentStatus('success');
         toast({
@@ -90,7 +88,6 @@ const Payment = () => {
 
       if (error) throw error;
 
-      console.log('Payment initiated:', data);
       setTransactionId(data.transactionId);
 
       toast({
@@ -98,12 +95,10 @@ const Payment = () => {
         description: data.message,
       });
 
-      // Start polling for payment status
       const pollInterval = setInterval(() => {
         checkPaymentStatus(data.transactionId);
       }, 3000);
 
-      // Stop polling after 60 seconds
       setTimeout(() => {
         clearInterval(pollInterval);
         if (paymentStatus === 'processing') {
@@ -130,14 +125,16 @@ const Payment = () => {
 
   if (paymentStatus === 'success') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-green-50 to-teal-50 dark:from-gray-900 dark:to-gray-800">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Card className="max-w-md w-full shadow-2xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 p-3 bg-green-500/10 rounded-full w-fit">
-              <CheckCircle2 className="h-16 w-16 text-green-500" />
+            <div className="mx-auto mb-4 p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full w-fit shadow-xl animate-bounce">
+              <CheckCircle2 className="h-16 w-16 text-white" />
             </div>
-            <CardTitle className="text-2xl">Paiement réussi !</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-3xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              Paiement réussi !
+            </CardTitle>
+            <CardDescription className="text-base">
               Votre demande de document a été envoyée avec succès.
             </CardDescription>
           </CardHeader>
@@ -145,6 +142,9 @@ const Payment = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Vous allez être redirigé vers vos demandes...
             </p>
+            <div className="flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -153,14 +153,16 @@ const Payment = () => {
 
   if (paymentStatus === 'failed') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Card className="max-w-md w-full shadow-2xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 p-3 bg-red-500/10 rounded-full w-fit">
-              <AlertCircle className="h-16 w-16 text-red-500" />
+            <div className="mx-auto mb-4 p-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-full w-fit shadow-xl">
+              <AlertCircle className="h-16 w-16 text-white" />
             </div>
-            <CardTitle className="text-2xl">Paiement échoué</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-3xl bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+              Paiement échoué
+            </CardTitle>
+            <CardDescription className="text-base">
               Une erreur est survenue lors du paiement.
             </CardDescription>
           </CardHeader>
@@ -172,7 +174,7 @@ const Payment = () => {
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/documents')}
-                className="flex-1"
+                className="flex-1 border-2"
               >
                 Retour
               </Button>
@@ -181,7 +183,7 @@ const Payment = () => {
                   setPaymentStatus('idle');
                   setLoading(false);
                 }}
-                className="flex-1"
+                className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
               >
                 Réessayer
               </Button>
@@ -193,41 +195,48 @@ const Payment = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
-      <Card className="max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-700"></div>
+      </div>
+
+      <Card className="max-w-md w-full shadow-2xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm z-10">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-            <CreditCard className="h-8 w-8 text-primary" />
+          <div className="mx-auto mb-4 p-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl w-fit shadow-lg">
+            <CreditCard className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl">Paiement sécurisé</CardTitle>
-          <CardDescription>
-            Montant à payer : <span className="font-bold text-lg">${amount.toFixed(2)}</span>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            Paiement sécurisé
+          </CardTitle>
+          <CardDescription className="text-lg">
+            Montant à payer : <span className="font-bold text-xl text-indigo-600 dark:text-indigo-400">${amount.toFixed(2)}</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePayment} className="space-y-6">
             <div className="space-y-4">
-              <Label>Mode de paiement</Label>
+              <Label className="text-base font-semibold">Mode de paiement</Label>
               <RadioGroup value={provider} onValueChange={(value) => setProvider(value as 'airtel' | 'mtn')}>
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-accent">
-                  <RadioGroupItem value="airtel" id="airtel" />
+                <div className="flex items-center space-x-3 border-2 rounded-xl p-4 cursor-pointer hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 dark:hover:from-orange-900/20 dark:hover:to-red-900/20 transition-all">
+                  <RadioGroupItem value="airtel" id="airtel" className="border-2" />
                   <Label htmlFor="airtel" className="flex-1 cursor-pointer">
-                    <div className="font-medium">Airtel Money</div>
-                    <div className="text-sm text-muted-foreground">Payer avec Airtel Money</div>
+                    <div className="font-semibold text-base">Airtel Money</div>
+                    <div className="text-sm text-muted-foreground">Paiement rapide et sécurisé</div>
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-accent">
-                  <RadioGroupItem value="mtn" id="mtn" />
+                <div className="flex items-center space-x-3 border-2 rounded-xl p-4 cursor-pointer hover:bg-gradient-to-r hover:from-yellow-50 hover:to-amber-50 dark:hover:from-yellow-900/20 dark:hover:to-amber-900/20 transition-all">
+                  <RadioGroupItem value="mtn" id="mtn" className="border-2" />
                   <Label htmlFor="mtn" className="flex-1 cursor-pointer">
-                    <div className="font-medium">MTN Mobile Money</div>
-                    <div className="text-sm text-muted-foreground">Payer avec MTN Mobile Money</div>
+                    <div className="font-semibold text-base">MTN Mobile Money</div>
+                    <div className="text-sm text-muted-foreground">Transaction instantanée</div>
                   </Label>
                 </div>
               </RadioGroup>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Numéro de téléphone</Label>
+              <Label htmlFor="phoneNumber" className="text-base font-semibold">Numéro de téléphone</Label>
               <Input
                 id="phoneNumber"
                 type="tel"
@@ -236,6 +245,7 @@ const Payment = () => {
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 required
                 disabled={loading}
+                className="border-2 focus:border-indigo-500 transition-colors text-base py-6"
               />
               <p className="text-xs text-muted-foreground">
                 Vous recevrez une demande de confirmation sur votre téléphone
@@ -243,11 +253,11 @@ const Payment = () => {
             </div>
 
             {paymentStatus === 'processing' && (
-              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                   <div>
-                    <p className="font-medium text-blue-900 dark:text-blue-100">
+                    <p className="font-semibold text-blue-900 dark:text-blue-100">
                       Paiement en cours...
                     </p>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -258,8 +268,8 @@ const Payment = () => {
               </div>
             )}
 
-            <div className="bg-muted/50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2 text-sm">Informations importantes :</h4>
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 p-4 rounded-xl border-2 border-indigo-100 dark:border-indigo-900">
+              <h4 className="font-semibold mb-2 text-sm">Informations importantes :</h4>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• Assurez-vous d'avoir suffisamment de solde</li>
                 <li>• Vous recevrez une demande de confirmation</li>
@@ -274,14 +284,14 @@ const Payment = () => {
                 variant="outline" 
                 onClick={() => navigate('/documents')}
                 disabled={loading}
-                className="flex-1"
+                className="flex-1 border-2"
               >
                 Annuler
               </Button>
               <Button 
                 type="submit" 
                 disabled={loading || paymentStatus === 'processing'}
-                className="flex-1"
+                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 py-6"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Payer ${amount.toFixed(2)}

@@ -221,8 +221,8 @@ const ProfileSetup = () => {
   }[step];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+      <Card className="w-full max-w-2xl shadow-2xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Configuration du profil</CardTitle>
           <CardDescription>
