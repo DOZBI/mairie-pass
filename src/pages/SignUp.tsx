@@ -1,271 +1,356 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, FieldValues } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, ArrowLeft, Mail, Phone, Lock, User, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, User, Mail, MapPin } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-const step1Schema = z.object({
-  firstName: z.string().min(2, "Le prénom est requis"),
-  lastName: z.string().min(2, "Le nom est requis"),
-  age: z.coerce.number().min(18, "Vous devez être majeur"),
-});
-
-const step2Schema = z.object({
-  email: z.string().email("Email invalide"),
-  phone: z.string().min(9, "Numéro de téléphone invalide"),
-  password: z.string().min(6, "Le mot de passe doit faire 6 caractères minimum"),
-});
-
-const step3Schema = z.object({
-  city: z.string().min(2, "La ville est requise"),
-  neighborhood: z.string().min(2, "Le quartier est requis"),
-  street: z.string().min(3, "La rue est requise"),
-  plotNumber: z.string().min(1, "Le numéro de parcelle est requis"),
-});
+// --- Définition des animations framer-motion ---
+const formVariants = {
+  hidden: { opacity: 0, x: 50 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -50 },
+};
 
 const SignUp = () => {
+  const [isLoginMode, setIsLoginMode] = useState(false); 
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({});
-  const { signUp } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [contactMethod, setContactMethod] = useState<'email' | 'phone'>('email'); 
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const { signUp, signIn } = useAuth();
 
-  const { register, handleSubmit, formState: { errors }, trigger } = useForm({
-    resolver: zodResolver(step === 1 ? step1Schema : step === 2 ? step2Schema : step3Schema),
-  });
+  const handleNextStep = () => {
+    setError('');
 
-  const handleNextStep = async () => {
-    const isValid = await trigger();
-    if (isValid) {
-      setStep(step + 1);
+    if (step === 1) {
+      if (!firstName || !lastName) {
+        setError("Veuillez remplir votre nom et prénom.");
+        return;
+      }
+      setStep(2);
+      return;
     }
   };
 
-  const processForm = async (data: FieldValues) => {
-    const updatedData = { ...formData, ...data };
-    setFormData(updatedData);
-
-    if (step < 3) {
-      handleNextStep();
-    } else {
-      setLoading(true);
-      const { email, password, firstName, lastName, phone, neighborhood, city } = updatedData as any;
-
-      const { error: signUpError, data: signUpData } = await signUp(email, password);
-
-      if (signUpError || !signUpData?.user) {
-        toast({
-          variant: "destructive",
-          title: "Erreur d'inscription",
-          description: signUpError?.message || "Une erreur est survenue.",
-        });
-        setLoading(false);
-        return;
-      }
-      
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: signUpData.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone,
-          neighborhood: neighborhood,
-          city_hall_name: city,
-          email: email
-        });
-        
-      if (profileError) {
-         toast({
-          variant: "destructive",
-          title: "Erreur de création du profil",
-          description: profileError.message,
-        });
-        setLoading(false);
-        return;
-      }
-
-      setStep(4);
-      setLoading(false);
+  const handleBack = () => {
+    setError('');
+    if (isLoginMode) {
+      navigate(-1);
     }
+    else if (step === 2) {
+      setStep(1);
+    } else {
+      navigate(-1); 
+    }
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!email || !password) throw new Error("Veuillez fournir un email et un mot de passe.");
+      
+      const { error: signInError } = await signIn(email, password);
+      
+      if (signInError) {
+        setError(signInError.message || "Identifiants incorrects ou échec de la connexion.");
+      } else {
+        toast({
+          title: "Connexion réussie",
+          description: "Vous êtes maintenant connecté.",
+        });
+        navigate('/document-requests'); 
+      }
+
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la connexion.");
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: err.message || "Erreur lors de la soumission.",
+      });
+    }
+
+    setLoading(false);
   };
   
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (contactMethod === 'email') {
+        if (!email || !password) throw new Error("Veuillez fournir un email et un mot de passe.");
+        
+        const { error: signUpError, data: signUpData } = await signUp(email, password);
+        
+        if (signUpError || !signUpData?.user) {
+          setError(signUpError?.message || "Échec de l'inscription par email.");
+          setLoading(false);
+          return;
+        }
+
+        // Créer le profil
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            user_id: signUpData.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            phone: phone || '',
+            email: email,
+            city_hall_name: '',
+            neighborhood: '',
+            address: ''
+          }]);
+          
+        if (profileError) {
+          setError(profileError.message);
+          setLoading(false);
+          return;
+        }
+
+        toast({
+          title: "Validation requise",
+          description: "Un lien de vérification a été envoyé à votre adresse email. Veuillez cliquer dessus pour activer votre compte.",
+        });
+        navigate('/document-requests'); 
+
+      } else {
+        if (!phone) throw new Error("Veuillez fournir un numéro de téléphone.");
+        
+        // Pour le téléphone, on peut implémenter Twilio plus tard
+        toast({
+          title: "Fonctionnalité à venir",
+          description: "L'inscription par téléphone sera bientôt disponible.",
+        });
+      }
+
+    } catch (err: any) {
+      setError(err.message || "Une erreur inattendue est survenue.");
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: err.message || "Erreur lors de la soumission.",
+      });
+    }
+
+    setLoading(false);
+  };
+  
+  // --- Composant de la Barre de Progression ---
   const ProgressBar = ({ currentStep }: { currentStep: number }) => {
-    const steps = [1, 2, 3];
+    const steps = [
+      { id: 1, label: 'Identité', icon: User },
+      { id: 2, label: 'Contact', icon: Mail }
+    ];
     return (
-      <div className="flex items-center justify-center mb-8">
+      <div className="flex w-full items-center justify-center mb-10">
         {steps.map((s, index) => (
-          <div key={s} className="flex items-center">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
-                ${currentStep > s ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white scale-110' : ''}
-                ${currentStep === s ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white scale-110 shadow-lg' : ''}
-                ${currentStep < s ? 'bg-gray-200 dark:bg-gray-700 text-gray-500' : ''}
-              `}
-            >
-              {currentStep > s ? '✓' : s}
+          <div key={s.id} className={`flex items-center ${index < steps.length - 1 ? 'w-full' : ''}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 ${currentStep >= s.id ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+              {currentStep > s.id ? <CheckCircle size={20} /> : s.id}
             </div>
-            {index < steps.length - 1 && (
-              <div className={`w-20 h-1 transition-all duration-300 ${currentStep > s ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gray-200 dark:bg-gray-700'}`} />
-            )}
+            <p className={`ml-3 font-semibold text-sm hidden sm:block transition-colors ${currentStep >= s.id ? 'text-gray-800' : 'text-gray-400'}`}>{s.label}</p>
+            {index < steps.length - 1 && <div className={`flex-1 h-1 mx-4 transition-colors duration-300 ${currentStep > s.id ? 'bg-green-500' : 'bg-gray-200'}`} />}
           </div>
         ))}
       </div>
     );
   };
-
-  const stepIcons = [User, Mail, MapPin];
-  const StepIcon = stepIcons[step - 1] || User;
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-700"></div>
+  
+  // --- Rendu du Formulaire de Connexion ---
+  const renderLoginForm = () => (
+    <div className="space-y-4">
+      <div className="text-center mb-8">
+        <Lock className="mx-auto text-green-500 mb-2" size={32}/>
+        <h1 className="text-3xl font-bold text-gray-800">Connexion</h1>
+        <p className="text-gray-500 mt-1">Accédez à votre compte.</p>
       </div>
+      
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="login-email">Email</Label>
+          <Input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="login-password">Mot de passe</Label>
+          <Input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+        </div>
+      </div>
+    </div>
+  );
 
-      <div className="w-full max-w-md bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 z-10 border border-white/20">
-        {step <= 3 && (
-          <>
-            <div className="text-center mb-6">
-              <div className="inline-block p-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4">
-                <StepIcon className="h-8 w-8 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Inscription
-              </h1>
-            </div>
-            <ProgressBar currentStep={step} />
-          </>
-        )}
-
-        <form onSubmit={handleSubmit(processForm)} className="space-y-4">
+  // --- Rendu du Contenu d'Inscription ---
+  const renderSignUpContent = () => {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          variants={formVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.3 }}
+        >
           {step === 1 && (
-            <div className="space-y-4 animate-fade-in">
-              <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">
-                Étape 1/3 - Informations personnelles
-              </p>
-              <div>
-                <Label htmlFor="firstName" className="text-sm font-medium">Prénom</Label>
-                <Input id="firstName" {...register("firstName")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.firstName && <p className="text-red-500 text-xs mt-1">{`${errors.firstName.message}`}</p>}
+              <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <User className="mx-auto text-green-500 mb-2" size={32}/>
+                    <h1 className="text-3xl font-bold text-gray-800">Vos Informations</h1>
+                    <p className="text-gray-500 mt-1">Qui êtes-vous ?</p>
+                  </div>
+                  <div className="space-y-4">
+                      <div className="space-y-2">
+                          <Label htmlFor="firstName">Prénom</Label>
+                          <Input id="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Votre prénom" required />
+                      </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="lastName">Nom de famille</Label>
+                          <Input id="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Votre nom" required />
+                      </div>
+                  </div>
               </div>
-              <div>
-                <Label htmlFor="lastName" className="text-sm font-medium">Nom</Label>
-                <Input id="lastName" {...register("lastName")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.lastName && <p className="text-red-500 text-xs mt-1">{`${errors.lastName.message}`}</p>}
-              </div>
-              <div>
-                <Label htmlFor="age" className="text-sm font-medium">Âge</Label>
-                <Input id="age" type="number" {...register("age")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.age && <p className="text-red-500 text-xs mt-1">{`${errors.age.message}`}</p>}
-              </div>
-            </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-4 animate-fade-in">
-              <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">
-                Étape 2/3 - Contact et sécurité
-              </p>
-              <div>
-                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                <Input id="email" type="email" {...register("email")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                 {errors.email && <p className="text-red-500 text-xs mt-1">{`${errors.email.message}`}</p>}
-              </div>
-              <div>
-                <Label htmlFor="phone" className="text-sm font-medium">Téléphone portable</Label>
-                <Input id="phone" type="tel" {...register("phone")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.phone && <p className="text-red-500 text-xs mt-1">{`${errors.phone.message}`}</p>}
-              </div>
-              <div>
-                <Label htmlFor="password" className="text-sm font-medium">Mot de passe</Label>
-                <Input id="password" type="password" {...register("password")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.password && <p className="text-red-500 text-xs mt-1">{`${errors.password.message}`}</p>}
-              </div>
-            </div>
-          )}
+              <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <Mail className="mx-auto text-green-500 mb-2" size={32}/>
+                    <h1 className="text-3xl font-bold text-gray-800">Vos Coordonnées</h1>
+                    <p className="text-gray-500 mt-1">Choisissez comment vous inscrire.</p>
+                  </div>
 
-          {step === 3 && (
-            <div className="space-y-4 animate-fade-in">
-              <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">
-                Étape 3/3 - Adresse de résidence
-              </p>
-              <div>
-                <Label htmlFor="city" className="text-sm font-medium">Ville</Label>
-                <Input id="city" {...register("city")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.city && <p className="text-red-500 text-xs mt-1">{`${errors.city.message}`}</p>}
-              </div>
-              <div>
-                <Label htmlFor="neighborhood" className="text-sm font-medium">Quartier</Label>
-                <Input id="neighborhood" {...register("neighborhood")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.neighborhood && <p className="text-red-500 text-xs mt-1">{`${errors.neighborhood.message}`}</p>}
-              </div>
-              <div>
-                <Label htmlFor="street" className="text-sm font-medium">Rue</Label>
-                <Input id="street" {...register("street")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                 {errors.street && <p className="text-red-500 text-xs mt-1">{`${errors.street.message}`}</p>}
-              </div>
-              <div>
-                <Label htmlFor="plotNumber" className="text-sm font-medium">Numéro de parcelle</Label>
-                <Input id="plotNumber" {...register("plotNumber")} className="border-2 focus:border-indigo-500 transition-colors mt-1" />
-                {errors.plotNumber && <p className="text-red-500 text-xs mt-1">{`${errors.plotNumber.message}`}</p>}
-              </div>
-            </div>
-          )}
+                  <div className="flex w-full rounded-md bg-gray-100 p-1">
+                      <button type="button" className={`flex-1 p-2 text-sm font-medium rounded-md transition-colors ${contactMethod === 'email' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500'}`} onClick={() => setContactMethod('email')}>
+                          <Mail className="h-4 w-4 mr-2 inline-block align-text-bottom" /> Email
+                      </button>
+                      <button type="button" className={`flex-1 p-2 text-sm font-medium rounded-md transition-colors ${contactMethod === 'phone' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500'}`} onClick={() => setContactMethod('phone')}>
+                          <Phone className="h-4 w-4 mr-2 inline-block align-text-bottom" /> Téléphone
+                      </button>
+                  </div>
 
-          {step < 4 && (
-            <div className="flex gap-4 pt-4">
-              {step > 1 && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setStep(step - 1)} 
-                  className="w-full border-2 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  Précédent
-                </Button>
+                  {contactMethod === 'email' && (
+                      <div className="space-y-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="email">Email</Label>
+                              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" required/>
+                          </div>
+                          <div className="space-y-2">
+                              <Label htmlFor="password">Mot de passe</Label>
+                              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required/>
+                          </div>
+                      </div>
+                  )}
+
+                  {contactMethod === 'phone' && (
+                      <div className="space-y-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="phone">Numéro de Téléphone</Label>
+                              <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+33 6 12 34 56 78" required/>
+                          </div>
+                      </div>
+                  )}
+              </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4 font-sans">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 relative">
+        
+        {/* Bouton Retour */}
+        <div className="absolute top-8 left-8">
+            <Button variant="ghost" onClick={handleBack} className="p-0 text-gray-600 hover:text-gray-900">
+              <ArrowLeft className="h-5 w-5 mr-1" /> Retour
+            </Button>
+        </div>
+
+        {/* Barre de Progression (uniquement en mode Inscription) */}
+        {!isLoginMode && <div className="mt-12 mb-8"><ProgressBar currentStep={step} /></div>}
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={isLoginMode ? 'login' : 'signup'}
+            variants={formVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+            className="flex flex-col"
+          >
+            <form onSubmit={isLoginMode ? handleLoginSubmit : handleSignUpSubmit}>
+              
+              {/* Contenu du Formulaire */}
+              <div className="flex-grow">
+                {isLoginMode ? renderLoginForm() : renderSignUpContent()}
+              </div>
+
+              {/* Affichage des Erreurs */}
+              {error && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300" 
-                disabled={loading}
-              >
-                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {step === 3 ? "S'inscrire" : "Continuer"}
-              </Button>
-            </div>
-          )}
 
-          {step === 4 && (
-             <div className="text-center space-y-6 animate-fade-in">
-               <div className="mx-auto p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full w-fit shadow-xl">
-                 <CheckCircle2 className="h-16 w-16 text-white" />
-               </div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  Inscription réussie !
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-base">
-                  Vérifiez votre boîte mail pour activer votre compte et commencer à utiliser nos services.
-                </p>
-                <Button 
-                  onClick={() => navigate('/auth')} 
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Se connecter
-                </Button>
-            </div>
-          )}
-        </form>
+              {/* Pied de page et Boutons */}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                
+                {/* Bouton Principal (Connexion / Continuer / S'inscrire) */}
+                {isLoginMode ? (
+                  <Button type="submit" className="w-full bg-green-500 hover:bg-green-600 h-12 rounded-lg" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Se connecter
+                  </Button>
+                ) : (
+                  <Button type={step === 1 ? "button" : "submit"} onClick={step === 1 ? handleNextStep : undefined} className="w-full bg-green-500 hover:bg-green-600 h-12 rounded-lg" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {step === 1 ? "Continuer" : (contactMethod === 'email' ? "Créer mon compte" : "Vérifier le numéro")}
+                  </Button>
+                )}
+
+                {/* Lien bascule Connexion/Inscription */}
+                <div className="text-center mt-4">
+                  <p className="text-sm text-gray-600">
+                    {isLoginMode ? "Pas encore de compte ?" : "Déjà un compte ?"}
+                    <button 
+                        type="button" 
+                        onClick={() => { setIsLoginMode(!isLoginMode); setError(''); setStep(1); }} 
+                        className="font-semibold text-green-500 hover:text-green-600 ml-1 underline"
+                    >
+                      {isLoginMode ? "Inscrivez-vous" : "Connectez-vous"}
+                    </button>
+                  </p>
+                  {!isLoginMode && step === 2 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                        En cliquant, vous acceptez nos Conditions d'utilisation.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </form>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
