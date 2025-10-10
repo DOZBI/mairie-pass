@@ -1,104 +1,137 @@
-import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, Shield, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { FileText, Lock, Clock, Hammer } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 
 const Cover = () => {
   const navigate = useNavigate();
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  useEffect(() => {
+    // ⚡ Joue le son du marteau
+    const hammerSound = new Audio("/sounds/hammer-hit.mp3"); // 🔊 Ton fichier son
+    hammerSound.volume = 0.4; // volume modéré
+    hammerSound.play().catch(() => {}); // empêche les erreurs de lecture auto
+
+    // ⏱️ Lance la transition automatique après 3,5 secondes
+    const timer = setTimeout(() => {
+      setIsLeaving(true);
+      setTimeout(() => {
+        navigate("/landing");
+      }, 700);
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Logo/Brand */}
-          <div className="mb-8 animate-fade-in">
-            <div className="inline-block p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl">
-              <FileText className="h-16 w-16 text-indigo-600 dark:text-indigo-400" />
+    <AnimatePresence mode="wait">
+      {!isLeaving && (
+        <motion.div
+          key="cover"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -40 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-green-950 text-white px-6 text-center overflow-hidden"
+        >
+          {/* Logo principal */}
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 10,
+              delay: 0.3,
+            }}
+            className="mb-10 relative"
+          >
+            <div className="flex items-center justify-center w-40 h-40 rounded-full bg-green-500/10 border border-green-400/30 backdrop-blur-sm shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+              <FileText className="h-20 w-20 text-green-400 animate-pulse" />
             </div>
-          </div>
 
-          {/* Main Title */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-fade-in">
-            Services d'État Civil
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-4 animate-fade-in">
-            Mairie - Documents en Ligne
-          </p>
-
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto animate-fade-in">
-            Demandez vos documents officiels en quelques clics. 
-            Rapide, sécurisé et disponible 24/7.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in">
-            <Button
-              size="lg"
-              className="text-lg px-8 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-              onClick={() => navigate('/landing')}
+            {/* Petites icônes flottantes */}
+            <motion.div
+              className="absolute -top-4 -left-8 bg-green-500/20 p-3 rounded-full"
+              animate={{ y: [0, -8, 0] }}
+              transition={{
+                repeat: Infinity,
+                duration: 2,
+                ease: "easeInOut",
+              }}
             >
-              Commencer
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-lg px-8 py-6 border-2 border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-300"
-              onClick={() => navigate('/auth')}
+              <Lock className="h-6 w-6 text-green-400" />
+            </motion.div>
+            <motion.div
+              className="absolute top-0 -right-8 bg-green-500/20 p-3 rounded-full"
+              animate={{ y: [0, 8, 0] }}
+              transition={{
+                repeat: Infinity,
+                duration: 2.5,
+                ease: "easeInOut",
+              }}
             >
-              Se connecter
-            </Button>
-          </div>
+              <Clock className="h-6 w-6 text-green-400" />
+            </motion.div>
+          </motion.div>
 
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-8 mt-20">
-            <div className="p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in">
-              <div className="inline-block p-3 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl mb-4">
-                <Clock className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-gray-200">
-                Rapide
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Recevez vos documents en quelques jours seulement
-              </p>
-            </div>
+          {/* Titre principal */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+            className="text-3xl font-bold mb-4"
+          >
+            Bienvenue sur <span className="text-green-400">MairiePass</span>
+          </motion.h1>
 
-            <div className="p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in">
-              <div className="inline-block p-3 bg-purple-100 dark:bg-purple-900/40 rounded-xl mb-4">
-                <Shield className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-gray-200">
-                Sécurisé
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Vos données sont protégées avec un cryptage de niveau bancaire
-              </p>
-            </div>
+          {/* Sous-texte */}
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+            className="text-gray-300 text-base max-w-sm mb-10"
+          >
+            Vos démarches administratives, <br /> simples, rapides et sécurisées.
+          </motion.p>
 
-            <div className="p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in">
-              <div className="inline-block p-3 bg-pink-100 dark:bg-pink-900/40 rounded-xl mb-4">
-                <FileText className="h-8 w-8 text-pink-600 dark:text-pink-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-gray-200">
-                Simple
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Interface intuitive et processus de demande simplifié
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+          {/* Icône marteau animée */}
+          <motion.div
+            initial={{ rotate: 0, scale: 1 }}
+            animate={{ rotate: [0, -20, 20, 0], scale: [1, 1.1, 1] }}
+            transition={{
+              repeat: Infinity,
+              duration: 1.5,
+              ease: "easeInOut",
+            }}
+            className="mt-4 mb-8 text-green-400"
+          >
+            <Hammer className="w-10 h-10" />
+          </motion.div>
 
-      {/* Footer */}
-      <footer className="py-8 text-center text-gray-600 dark:text-gray-400">
-        <p className="text-sm">© 2025 Mairie Services en Ligne. Tous droits réservés.</p>
-      </footer>
-    </div>
+          {/* Barre de progression */}
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: "60%" }}
+            transition={{ delay: 1, duration: 2.2, ease: "easeInOut" }}
+            className="h-1 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)] mb-6"
+          />
+
+          {/* Footer */}
+          <motion.footer
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 1 }}
+            className="mt-10 text-sm text-gray-500"
+          >
+            © 2025 MairiePass • Tous droits réservés
+          </motion.footer>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 export default Cover;
+            
