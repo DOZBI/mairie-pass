@@ -14,121 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
-      document_requests: {
+      electronic_tickets: {
         Row: {
-          additional_info: Json | null
-          admin_notes: string | null
-          amount: number | null
           created_at: string
-          document_type: Database["public"]["Enums"]["document_type"]
-          document_url: string | null
           id: string
-          reason: string | null
-          status: Database["public"]["Enums"]["request_status"]
-          updated_at: string
+          is_winner: boolean
+          prize_amount: number | null
+          revealed_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          ticket_type: Database["public"]["Enums"]["ticket_type"]
           user_id: string
         }
         Insert: {
-          additional_info?: Json | null
-          admin_notes?: string | null
-          amount?: number | null
           created_at?: string
-          document_type: Database["public"]["Enums"]["document_type"]
-          document_url?: string | null
           id?: string
-          reason?: string | null
-          status?: Database["public"]["Enums"]["request_status"]
-          updated_at?: string
+          is_winner?: boolean
+          prize_amount?: number | null
+          revealed_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_type: Database["public"]["Enums"]["ticket_type"]
           user_id: string
         }
         Update: {
-          additional_info?: Json | null
-          admin_notes?: string | null
-          amount?: number | null
           created_at?: string
-          document_type?: Database["public"]["Enums"]["document_type"]
-          document_url?: string | null
           id?: string
-          reason?: string | null
-          status?: Database["public"]["Enums"]["request_status"]
-          updated_at?: string
+          is_winner?: boolean
+          prize_amount?: number | null
+          revealed_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_type?: Database["public"]["Enums"]["ticket_type"]
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "document_requests_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
-      payment_transactions: {
+      physical_tickets: {
         Row: {
-          amount: number
-          completed_at: string | null
           created_at: string
-          currency: string
-          document_request_id: string
-          error_message: string | null
           id: string
-          phone_number: string
-          provider: string
-          provider_reference: string | null
-          status: string
-          transaction_reference: string | null
-          updated_at: string
-          user_id: string
+          is_winner: boolean
+          prize_amount: number | null
+          purchased_by: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          ticket_code: string
+          used_at: string | null
         }
         Insert: {
-          amount?: number
-          completed_at?: string | null
           created_at?: string
-          currency?: string
-          document_request_id: string
-          error_message?: string | null
           id?: string
-          phone_number: string
-          provider: string
-          provider_reference?: string | null
-          status?: string
-          transaction_reference?: string | null
-          updated_at?: string
-          user_id: string
+          is_winner?: boolean
+          prize_amount?: number | null
+          purchased_by?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_code: string
+          used_at?: string | null
         }
         Update: {
-          amount?: number
-          completed_at?: string | null
           created_at?: string
-          currency?: string
-          document_request_id?: string
-          error_message?: string | null
           id?: string
-          phone_number?: string
-          provider?: string
-          provider_reference?: string | null
-          status?: string
-          transaction_reference?: string | null
-          updated_at?: string
-          user_id?: string
+          is_winner?: boolean
+          prize_amount?: number | null
+          purchased_by?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_code?: string
+          used_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "payment_transactions_document_request_id_fkey"
-            columns: ["document_request_id"]
-            isOneToOne: false
-            referencedRelation: "document_requests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -178,6 +128,84 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_prices: {
+        Row: {
+          created_at: string
+          id: string
+          premium_multiplier: number | null
+          price: number
+          ticket_type: Database["public"]["Enums"]["ticket_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          premium_multiplier?: number | null
+          price?: number
+          ticket_type: Database["public"]["Enums"]["ticket_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          premium_multiplier?: number | null
+          price?: number
+          ticket_type?: Database["public"]["Enums"]["ticket_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ticket_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          electronic_ticket_id: string | null
+          id: string
+          physical_ticket_id: string | null
+          ticket_type: Database["public"]["Enums"]["ticket_type"] | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          electronic_ticket_id?: string | null
+          id?: string
+          physical_ticket_id?: string | null
+          ticket_type?: Database["public"]["Enums"]["ticket_type"] | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          electronic_ticket_id?: string | null
+          id?: string
+          physical_ticket_id?: string | null
+          ticket_type?: Database["public"]["Enums"]["ticket_type"] | null
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_transactions_electronic_ticket_id_fkey"
+            columns: ["electronic_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "electronic_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_transactions_physical_ticket_id_fkey"
+            columns: ["physical_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "physical_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -195,6 +223,36 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          total_spent: number
+          total_won: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_spent?: number
+          total_won?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_spent?: number
+          total_won?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -226,6 +284,9 @@ export type Database = {
         | "rejected"
         | "completed"
         | "pending_payment"
+      ticket_status: "available" | "sold" | "used" | "expired"
+      ticket_type: "physical" | "electronic" | "premium"
+      transaction_type: "purchase" | "win" | "refund"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -367,6 +428,9 @@ export const Constants = {
         "completed",
         "pending_payment",
       ],
+      ticket_status: ["available", "sold", "used", "expired"],
+      ticket_type: ["physical", "electronic", "premium"],
+      transaction_type: ["purchase", "win", "refund"],
     },
   },
 } as const

@@ -1,5 +1,3 @@
-// src/App.tsx (version modifiée)
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,11 +9,11 @@ import Cover from "./pages/Cover";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import ProfileSetup from "./pages/ProfileSetup";
-import DocumentRequests from "./pages/DocumentRequests";
-import MyRequests from "./pages/MyRequests";
+import Tickets from "./pages/Tickets";
+import MyTickets from "./pages/MyTickets";
+import Wallet from "./pages/Wallet";
 import NotFound from "./pages/NotFound";
 import SignUp from "./pages/SignUp";
-import Payment from "./pages/Payment";
 import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
@@ -34,11 +32,10 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
-            <Route path="/documents" element={<DocumentRequests />} />
-            <Route path="/my-requests" element={<MyRequests />} />
-            <Route path="/payment" element={<Payment />} />
+            <Route path="/tickets" element={<Tickets />} />
+            <Route path="/my-tickets" element={<MyTickets />} />
+            <Route path="/wallet" element={<Wallet />} />
             <Route path="/admin" element={<Admin />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
