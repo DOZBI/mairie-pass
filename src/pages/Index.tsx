@@ -1,22 +1,42 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, Users, Shield, LogOut, Settings, HelpCircle } from 'lucide-react';
+import { Ticket, Wallet, Gift, Settings, LogOut, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
+  const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      fetchBalance();
+    }
+  }, [user]);
+
+  const fetchBalance = async () => {
+    const { data } = await supabase
+      .from('user_wallets')
+      .select('balance')
+      .eq('user_id', user?.id)
+      .single();
+    
+    if (data) {
+      setBalance(data.balance);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -38,33 +58,33 @@ const Index = () => {
 
   const services = [
     {
-      title: 'Demander Document',
-      desc: 'Payant',
+      title: 'Acheter Tickets',
+      desc: 'Tentez votre chance',
       color: 'from-green-600/20 to-green-400/10',
-      icon: <FileText className="h-14 w-14 text-green-400" />,
-      action: () => navigate('/documents'),
+      icon: <Ticket className="h-14 w-14 text-green-400" />,
+      action: () => navigate('/tickets'),
     },
     {
-      title: 'Mes Demandes',
-      desc: 'Suivi',
+      title: 'Mes Tickets',
+      desc: 'Révéler & Historique',
       color: 'from-emerald-600/20 to-emerald-400/10',
-      icon: <Users className="h-14 w-14 text-emerald-400" />,
-      action: () => navigate('/my-requests'),
+      icon: <Gift className="h-14 w-14 text-emerald-400" />,
+      action: () => navigate('/my-tickets'),
     },
     {
-      title: 'Mon Profil',
-      desc: 'Gérer',
+      title: 'Mon Portefeuille',
+      desc: balance !== null ? `${balance.toFixed(2)} FC` : 'Chargement...',
       color: 'from-lime-600/20 to-lime-400/10',
-      icon: <Shield className="h-14 w-14 text-lime-400" />,
-      action: () => navigate('/profile'),
+      icon: <Wallet className="h-14 w-14 text-lime-400" />,
+      action: () => navigate('/wallet'),
     },
     ...(isAdmin
       ? [
           {
             title: 'Administration',
             desc: 'Gestion',
-            color: 'from-green-800/30 to-green-600/10',
-            icon: <Settings className="h-14 w-14 text-green-500" />,
+            color: 'from-purple-600/20 to-purple-400/10',
+            icon: <Settings className="h-14 w-14 text-purple-400" />,
             action: () => navigate('/admin'),
           },
         ]
@@ -72,8 +92,8 @@ const Index = () => {
     {
       title: 'Aide & Support',
       desc: '24h/7j',
-      color: 'from-green-900/30 to-green-600/10',
-      icon: <HelpCircle className="h-14 w-14 text-green-400" />,
+      color: 'from-gray-600/20 to-gray-400/10',
+      icon: <HelpCircle className="h-14 w-14 text-gray-400" />,
       action: () => navigate('/support'),
     },
   ];
@@ -88,7 +108,10 @@ const Index = () => {
       <div className="max-w-md mx-auto py-10 px-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-green-400">Services</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-green-400">🎰 Tickets</h1>
+            <p className="text-gray-400 text-sm">Tentez votre chance!</p>
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -99,7 +122,17 @@ const Index = () => {
           </Button>
         </div>
 
-        {/* Grille de services */}
+        {/* Balance Card */}
+        <Card className="mb-8 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 backdrop-blur-xl">
+          <CardContent className="p-6 text-center">
+            <p className="text-gray-400 text-sm mb-1">Votre solde</p>
+            <p className="text-4xl font-bold text-white">
+              {balance !== null ? `${balance.toFixed(2)} FC` : '...'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Services Grid */}
         <div className="grid grid-cols-2 gap-4">
           {services.map((service, index) => (
             <motion.div
@@ -137,4 +170,3 @@ const Index = () => {
 };
 
 export default Index;
-              
