@@ -5,11 +5,12 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Ticket, Wallet, Gift, Settings, LogOut, HelpCircle } from 'lucide-react';
+import { Ticket, Wallet, Gift, Settings, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import MobileMenu from '@/components/ui/mobile-menu';
 
 const Index = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [balance, setBalance] = useState<number | null>(null);
@@ -36,11 +37,6 @@ const Index = () => {
     if (data) {
       setBalance(data.balance);
     }
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
   };
 
   if (loading) {
@@ -112,14 +108,7 @@ const Index = () => {
             <h1 className="text-3xl font-bold text-green-400">🎰 Tickets</h1>
             <p className="text-gray-400 text-sm">Tentez votre chance!</p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSignOut}
-            className="text-green-400 hover:bg-green-600/10"
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <MobileMenu />
         </div>
 
         {/* Balance Card */}
