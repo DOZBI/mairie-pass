@@ -16,6 +16,8 @@ import Wallet from "./pages/Wallet";
 import NotFound from "./pages/NotFound";
 import SignUp from "./pages/SignUp";
 import Admin from "./pages/Admin";
+import AdminLogin from "./pages/AdminLogin";
+import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -23,8 +25,9 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const location = useLocation();
   
-  // On ne cache le menu QUE sur la page Cover (chemin "/")
-  const showMenu = location.pathname !== "/";
+  // On ne cache le menu sur la page Cover et les pages admin
+  const hideMenuPaths = ["/", "/admin-login", "/admin-panel"];
+  const showMenu = !hideMenuPaths.includes(location.pathname);
 
   return (
     <div className={`min-h-screen ${showMenu ? "pb-20" : ""}`}>
@@ -39,6 +42,8 @@ const AppContent = () => {
         <Route path="/my-tickets" element={<MyTickets />} />
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/admin-panel" element={<AdminPanel />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 
