@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -33,14 +32,11 @@ const Wallet = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchWalletData();
-    }
+    if (user) fetchWalletData();
   }, [user]);
 
   const fetchWalletData = async () => {
     try {
-      // Fetch or create wallet
       let { data: walletData, error: walletError } = await supabase
         .from('user_wallets')
         .select('*')
@@ -48,22 +44,16 @@ const Wallet = () => {
         .single();
 
       if (walletError && walletError.code === 'PGRST116') {
-        // Create wallet if it doesn't exist
         const { data: newWallet, error: createError } = await supabase
           .from('user_wallets')
           .insert({ user_id: user?.id, balance: 0 })
-          .select()
-          .single();
-
+          .select().single();
         if (createError) throw createError;
         walletData = newWallet;
-      } else if (walletError) {
-        throw walletError;
-      }
+      } else if (walletError) throw walletError;
 
       setWallet(walletData);
 
-      // Fetch transactions
       const { data: txData, error: txError } = await supabase
         .from('ticket_transactions')
         .select('*')
@@ -74,139 +64,119 @@ const Wallet = () => {
       if (txError) throw txError;
       setTransactions(txData || []);
     } catch (error: any) {
-      toast.error('Erreur lors du chargement du portefeuille');
+      toast.error('Erreur de chargement');
     } finally {
       setLoading(false);
     }
   };
 
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
-      case 'win': return TrendingUp;
-      case 'purchase': return TrendingDown;
-      default: return WalletIcon;
-    }
-  };
-
-  const getTransactionColor = (type: string) => {
-    switch (type) {
-      case 'win': return 'text-green-400';
-      case 'purchase': return 'text-red-400';
-      case 'refund': return 'text-blue-400';
-      default: return 'text-gray-400';
-    }
-  };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        Vous devez être connecté pour accéder à cette page.
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-green-950">
-        <Loader2 className="h-8 w-8 animate-spin text-green-400" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#FDF2F2]">
+      <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+    </div>
+  );
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-green-950 text-white p-4"
-    >
-      <div className="container mx-auto max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/dashboard')}
-          className="mb-6 text-green-400 hover:bg-green-900/40"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour
-        </Button>
+    <div className="min-h-screen bg-[#FDF2F2] pb-32 font-sans">
+      {/* Header Minimaliste Rouge */}
+      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-red-100 px-4 py-4 flex items-center justify-between">
+        <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-red-50 rounded-full transition-colors">
+          <ArrowLeft className="h-6 w-6 text-red-600" />
+        </button>
+        <h1 className="text-lg font-bold text-gray-900">Portefeuille</h1>
+        <button className="p-2 bg-red-100 rounded-full">
+          <Plus className="h-5 w-5 text-red-600" />
+        </button>
+      </nav>
 
-        <h1 className="text-4xl font-bold text-green-400 mb-8">Mon Portefeuille</h1>
-
-        {/* Balance Card */}
-        <Card className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 backdrop-blur-xl mb-8">
-          <CardHeader>
-            <CardTitle className="text-gray-400 text-sm">Solde disponible</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold text-white mb-6">
-              {wallet?.balance.toFixed(2) || '0.00'} FC
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-black/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-green-400 mb-1">
-                  <ArrowUpRight className="h-4 w-4" />
-                  <span className="text-sm">Total gagné</span>
-                </div>
-                <p className="text-2xl font-bold text-white">
-                  {wallet?.total_won.toFixed(2) || '0.00'} FC
-                </p>
-              </div>
-              <div className="bg-black/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-red-400 mb-1">
-                  <ArrowDownRight className="h-4 w-4" />
-                  <span className="text-sm">Total dépensé</span>
-                </div>
-                <p className="text-2xl font-bold text-white">
-                  {wallet?.total_spent.toFixed(2) || '0.00'} FC
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Transactions */}
-        <h2 className="text-2xl font-bold text-white mb-4">Historique des transactions</h2>
+      <div className="max-w-md mx-auto p-4 space-y-6">
         
-        {transactions.length === 0 ? (
-          <Card className="bg-black/40 border border-green-700/20 backdrop-blur-xl p-8 text-center">
-            <WalletIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-400">Aucune transaction pour le moment</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {transactions.map((tx, index) => {
-              const IconComponent = getTransactionIcon(tx.transaction_type);
-              const colorClass = getTransactionColor(tx.transaction_type);
+        {/* Apple Style Balance Card - Thème Rouge */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-800 rounded-[32px] p-8 text-white shadow-2xl shadow-red-200"
+        >
+          <div className="absolute top-[-20%] right-[-10%] opacity-10 rotate-12">
+            <WalletIcon size={200} />
+          </div>
+          
+          <p className="text-red-100 text-sm font-medium mb-1 opacity-80 uppercase tracking-widest">Solde Actuel</p>
+          <div className="text-5xl font-black mb-8 tracking-tighter">
+            {wallet?.balance.toLocaleString()} <span className="text-2xl font-light opacity-70">FC</span>
+          </div>
 
-              return (
-                <motion.div
-                  key={tx.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card className="bg-black/30 border border-gray-800/30 backdrop-blur-xl">
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <div className={`p-2 rounded-lg bg-black/50 ${colorClass}`}>
-                        <IconComponent className="h-5 w-5" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <div className="flex items-center gap-2 text-red-100/80 mb-1">
+                <ArrowUpRight className="h-3 w-3" />
+                <span className="text-[10px] font-bold uppercase">Gagné</span>
+              </div>
+              <p className="text-lg font-bold">{wallet?.total_won.toLocaleString()} FC</p>
+            </div>
+            <div className="bg-black/10 backdrop-blur-md rounded-2xl p-4 border border-white/5">
+              <div className="flex items-center gap-2 text-red-100/80 mb-1">
+                <ArrowDownRight className="h-3 w-3" />
+                <span className="text-[10px] font-bold uppercase">Dépensé</span>
+              </div>
+              <p className="text-lg font-bold">{wallet?.total_spent.toLocaleString()} FC</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Historique des Transactions */}
+        <section>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Activité Récente</h2>
+          </div>
+
+          <div className="bg-white rounded-[30px] shadow-sm border border-red-50 overflow-hidden">
+            {transactions.length === 0 ? (
+              <div className="p-10 text-center text-gray-400 text-sm italic">
+                Aucun mouvement enregistré
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {transactions.map((tx, idx) => (
+                  <motion.div
+                    key={tx.id}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className="p-5 flex items-center justify-between active:bg-red-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-2xl ${
+                        tx.transaction_type === 'win' 
+                          ? 'bg-green-100 text-green-600' 
+                          : 'bg-red-50 text-red-500'
+                      }`}>
+                        {tx.transaction_type === 'win' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-white">{tx.description}</p>
-                        <p className="text-xs text-gray-500">
-                          {format(new Date(tx.created_at), 'dd MMM yyyy à HH:mm', { locale: fr })}
+                      <div>
+                        <p className="text-sm font-bold text-gray-800 line-clamp-1">{tx.description}</p>
+                        <p className="text-[11px] text-gray-400 font-medium uppercase">
+                          {format(new Date(tx.created_at), 'dd MMMM yyyy', { locale: fr })}
                         </p>
                       </div>
-                      <div className={`text-lg font-bold ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)} FC
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className={`text-sm font-black ${
+                        tx.amount > 0 ? 'text-green-500' : 'text-red-600'
+                      }`}>
+                        {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()}
+                      </p>
+                      <p className="text-[9px] text-gray-300 font-bold uppercase tracking-tighter">FCFA</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </section>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
