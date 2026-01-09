@@ -49,9 +49,6 @@ const SignUp = () => {
         first_name: firstName,
         last_name: lastName,
         email: email,
-        phone: '',
-        neighborhood: '',
-        city_hall_name: '',
       }]);
 
     if (profileError) {
@@ -167,4 +164,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-          
