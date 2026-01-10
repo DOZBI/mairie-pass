@@ -1,74 +1,17 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useWallet } from '@/hooks/useWallet';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Wallet as WalletIcon, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Loader2, Plus } from 'lucide-react';
-import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-interface WalletData {
-  balance: number;
-  total_won: number;
-  total_spent: number;
-}
-
-interface Transaction {
-  id: string;
-  transaction_type: string;
-  amount: number;
-  ticket_type: string;
-  description: string;
-  created_at: string;
-}
+import { useState } from 'react';
+import { RechargeModal } from '@/components/RechargeModal';
 
 const Wallet = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [wallet, setWallet] = useState<WalletData | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) fetchWalletData();
-  }, [user]);
-
-  const fetchWalletData = async () => {
-    try {
-      let { data: walletData, error: walletError } = await supabase
-        .from('user_wallets')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (walletError && walletError.code === 'PGRST116') {
-        const { data: newWallet, error: createError } = await supabase
-          .from('user_wallets')
-          .insert({ user_id: user?.id, balance: 0 })
-          .select().single();
-        if (createError) throw createError;
-        walletData = newWallet;
-      } else if (walletError) throw walletError;
-
-      setWallet(walletData);
-
-      const { data: txData, error: txError } = await supabase
-        .from('ticket_transactions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (txError) throw txError;
-      setTransactions(txData || []);
-    } catch (error: any) {
-      toast.error('Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { wallet, transactions, loading, recharging, initiateRecharge, checkRechargeStatus } = useWallet();
+  const [showRechargeModal, setShowRechargeModal] = useState(false);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#FDF2F2]">
@@ -84,7 +27,10 @@ const Wallet = () => {
           <ArrowLeft className="h-6 w-6 text-red-600" />
         </button>
         <h1 className="text-lg font-bold text-gray-900">Portefeuille</h1>
-        <button className="p-2 bg-red-100 rounded-full">
+        <button 
+          onClick={() => setShowRechargeModal(true)}
+          className="p-2 bg-red-100 rounded-full hover:bg-red-200 transition-colors"
+        >
           <Plus className="h-5 w-5 text-red-600" />
         </button>
       </nav>
@@ -122,6 +68,15 @@ const Wallet = () => {
               <p className="text-lg font-bold">{wallet?.total_spent.toLocaleString()} FC</p>
             </div>
           </div>
+
+          {/* Recharge Button */}
+          <Button
+            onClick={() => setShowRechargeModal(true)}
+            className="w-full mt-6 h-14 bg-white/20 hover:bg-white/30 text-white font-bold rounded-2xl backdrop-blur-sm border border-white/20"
+          >
+            <Plus className="mr-2" size={20} />
+            Recharger via MTN Mobile Money
+          </Button>
         </motion.div>
 
         {/* Historique des Transactions */}
@@ -147,14 +102,14 @@ const Wallet = () => {
                   >
                     <div className="flex items-center gap-4">
                       <div className={`p-3 rounded-2xl ${
-                        tx.transaction_type === 'win' 
+                        tx.transaction_type === 'win' || tx.amount > 0
                           ? 'bg-green-100 text-green-600' 
                           : 'bg-red-50 text-red-500'
                       }`}>
-                        {tx.transaction_type === 'win' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                        {tx.transaction_type === 'win' || tx.amount > 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-800 line-clamp-1">{tx.description}</p>
+                        <p className="text-sm font-bold text-gray-800 line-clamp-1">{tx.description || 'Transaction'}</p>
                         <p className="text-[11px] text-gray-400 font-medium uppercase">
                           {format(new Date(tx.created_at), 'dd MMMM yyyy', { locale: fr })}
                         </p>
@@ -176,6 +131,15 @@ const Wallet = () => {
           </div>
         </section>
       </div>
+
+      {/* Recharge Modal */}
+      <RechargeModal
+        open={showRechargeModal}
+        onOpenChange={setShowRechargeModal}
+        onInitiateRecharge={initiateRecharge}
+        onCheckStatus={checkRechargeStatus}
+        recharging={recharging}
+      />
     </div>
   );
 };
