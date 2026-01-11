@@ -268,13 +268,15 @@ const Tickets = () => {
               ? Math.min(...availableBatches.map(b => b.price))
               : (ticket.type !== 'physical' ? getPrice(ticket.type) : 0);
 
+            const isPhysical = ticket.type === 'physical';
+            
             return (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className={`bg-white rounded-[32px] p-2 border border-red-50 shadow-sm hover:shadow-md transition-all ${!hasAvailable && ticket.type !== 'physical' ? 'opacity-60' : ''}`}
+                className={`bg-white rounded-[32px] p-2 border border-red-50 shadow-sm hover:shadow-md transition-all ${!hasAvailable && !isPhysical ? 'opacity-60' : ''}`}
               >
                 <div className="p-4 flex items-center gap-4">
                   <div className={`w-16 h-16 rounded-[22px] bg-gradient-to-br ${ticket.gradient} flex items-center justify-center text-white shadow-lg shadow-red-100`}>
@@ -297,7 +299,7 @@ const Tickets = () => {
                 
                 <Button 
                   onClick={ticket.action}
-                  disabled={purchaseLoading || (!hasAvailable && ticket.type !== 'physical')}
+                  disabled={purchaseLoading || (!hasAvailable && !isPhysical)}
                   className="w-full bg-gray-50 hover:bg-red-600 hover:text-white text-gray-900 font-bold h-14 rounded-[24px] border-none shadow-none transition-all group"
                 >
                   {purchaseLoading ? <Loader2 className="animate-spin" /> : <>{ticket.btn} <ChevronRight size={18} className="ml-1 group-hover:translate-x-1 transition-transform" /></>}
