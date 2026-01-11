@@ -41,6 +41,138 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_football_tickets: {
+        Row: {
+          base_stake: number | null
+          created_at: string | null
+          estimated_win_multiplier: number | null
+          expires_at: string | null
+          id: string
+          is_combo: boolean | null
+          match_id: string | null
+          predictions: Json
+          result: string | null
+          status: string | null
+          ticket_description: string | null
+          ticket_name: string
+          total_odds: number | null
+          total_players: number | null
+          total_stake: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_stake?: number | null
+          created_at?: string | null
+          estimated_win_multiplier?: number | null
+          expires_at?: string | null
+          id?: string
+          is_combo?: boolean | null
+          match_id?: string | null
+          predictions?: Json
+          result?: string | null
+          status?: string | null
+          ticket_description?: string | null
+          ticket_name: string
+          total_odds?: number | null
+          total_players?: number | null
+          total_stake?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_stake?: number | null
+          created_at?: string | null
+          estimated_win_multiplier?: number | null
+          expires_at?: string | null
+          id?: string
+          is_combo?: boolean | null
+          match_id?: string | null
+          predictions?: Json
+          result?: string | null
+          status?: string | null
+          ticket_description?: string | null
+          ticket_name?: string
+          total_odds?: number | null
+          total_players?: number | null
+          total_stake?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_football_tickets_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_ticket_plays: {
+        Row: {
+          actual_win: number | null
+          ai_ticket_id: string
+          created_at: string | null
+          id: string
+          is_identical_to_proposal: boolean | null
+          payment_id: string | null
+          potential_win: number | null
+          predicted_selections: Json
+          stake_amount: number
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_win?: number | null
+          ai_ticket_id: string
+          created_at?: string | null
+          id?: string
+          is_identical_to_proposal?: boolean | null
+          payment_id?: string | null
+          potential_win?: number | null
+          predicted_selections: Json
+          stake_amount: number
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_win?: number | null
+          ai_ticket_id?: string
+          created_at?: string | null
+          id?: string
+          is_identical_to_proposal?: boolean | null
+          payment_id?: string | null
+          potential_win?: number | null
+          predicted_selections?: Json
+          stake_amount?: number
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_ticket_plays_ai_ticket_id_fkey"
+            columns: ["ai_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ai_football_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_ticket_plays_ai_ticket_id_fkey"
+            columns: ["ai_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ai_ticket_stats"
+            referencedColumns: ["ticket_id"]
+          },
+          {
+            foreignKeyName: "ai_ticket_plays_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_ticket_proposals: {
         Row: {
           bonus_count: number | null
@@ -738,12 +870,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ai_ticket_stats: {
+        Row: {
+          identical_percentage: number | null
+          identical_plays: number | null
+          result: string | null
+          status: string | null
+          ticket_id: string | null
+          ticket_name: string | null
+          total_plays: number | null
+          total_staked: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      apply_70_percent_refund: {
+        Args: { ticket_uuid: string }
+        Returns: {
+          refunded_count: number
+          total_refunded: number
+        }[]
+      }
       calculate_batch_loss_rate: {
         Args: { batch_uuid: string }
         Returns: number
+      }
+      distribute_ai_ticket_wins: {
+        Args: { ticket_uuid: string }
+        Returns: {
+          total_distributed: number
+          winners_count: number
+        }[]
       }
       has_role: {
         Args: {
