@@ -8,3 +8,21 @@ verify_jwt = false
 
 [functions.check-payment-status]
 verify_jwt = true
+
+[functions.mtn-momo-payment]
+verify_jwt = false
+
+[functions.redeem-physical-ticket]
+verify_jwt = false
+
+[functions.reveal-physical-ticket]
+verify_jwt = false
+
+[functions.generate-ai-tickets]
+verify_jwt = false
+
+[functions.play-ai-ticket]
+verify_jwt = false
+
+[functions.process-ai-ticket-results]
+verify_jwt = false
