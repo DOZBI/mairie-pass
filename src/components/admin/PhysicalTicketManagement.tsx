@@ -11,9 +11,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, Loader2, Ticket, Search, Filter, Download } from 'lucide-react';
+import { Plus, Trash2, Loader2, Ticket, Search, Filter, Download, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Predefined prize amounts in XAF (FCFA)
+const PRIZE_OPTIONS = [
+  { value: '500', label: '500 FC' },
+  { value: '1000', label: '1 000 FC' },
+  { value: '2000', label: '2 000 FC' },
+  { value: '5000', label: '5 000 FC' },
+  { value: '10000', label: '10 000 FC' },
+  { value: '25000', label: '25 000 FC' },
+  { value: '50000', label: '50 000 FC' },
+  { value: '100000', label: '100 000 FC' },
+];
 
 interface PhysicalTicket {
   id: string;
@@ -24,6 +36,8 @@ interface PhysicalTicket {
   purchased_by: string | null;
   used_at: string | null;
   created_at: string;
+  activated_at: string | null;
+  claimed_at: string | null;
 }
 
 interface PhysicalTicketManagementProps {
@@ -41,12 +55,14 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
   // Single ticket form
   const [newTicketCode, setNewTicketCode] = useState('');
   const [newTicketIsWinner, setNewTicketIsWinner] = useState(false);
-  const [newTicketPrize, setNewTicketPrize] = useState('');
+  const [newTicketPrize, setNewTicketPrize] = useState('1000');
+  const [customPrize, setCustomPrize] = useState('');
 
   // Bulk form
   const [bulkCount, setBulkCount] = useState('10');
-  const [bulkWinnerPercent, setBulkWinnerPercent] = useState('10');
+  const [bulkWinnerCount, setBulkWinnerCount] = useState('2');
   const [bulkPrize, setBulkPrize] = useState('1000');
+  const [bulkCustomPrize, setBulkCustomPrize] = useState('');
 
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.ticket_code.toLowerCase().includes(searchTerm.toLowerCase());
@@ -63,6 +79,10 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
       return;
     }
 
+    const prizeAmount = newTicketPrize === 'custom' 
+      ? parseFloat(customPrize) || 0 
+      : parseFloat(newTicketPrize) || 0;
+
     setLoading(true);
 
     const { error } = await supabase
@@ -70,7 +90,8 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
       .insert({
         ticket_code: newTicketCode.toUpperCase().trim(),
         is_winner: newTicketIsWinner,
-        prize_amount: newTicketIsWinner ? parseFloat(newTicketPrize) || 0 : 0
+        prize_amount: newTicketIsWinner ? prizeAmount : 0,
+        predefined_result: newTicketIsWinner ? 'win' : 'lose'
       });
 
     if (error) {
@@ -79,7 +100,8 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
       toast.success('Ticket ajouté avec succès');
       setNewTicketCode('');
       setNewTicketIsWinner(false);
-      setNewTicketPrize('');
+      setNewTicketPrize('1000');
+      setCustomPrize('');
       setShowAddDialog(false);
       onUpdate();
     }
@@ -89,24 +111,42 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
 
   const addBulkTickets = async () => {
     const count = parseInt(bulkCount);
-    const winnerPercent = parseInt(bulkWinnerPercent) / 100;
-    const prize = parseFloat(bulkPrize);
+    const winnerCount = parseInt(bulkWinnerCount);
+    const prizeAmount = bulkPrize === 'custom' 
+      ? parseFloat(bulkCustomPrize) || 0 
+      : parseFloat(bulkPrize) || 0;
 
     if (count <= 0 || count > 1000) {
       toast.error('Nombre invalide (1-1000)');
       return;
     }
 
+    if (winnerCount < 0 || winnerCount > count) {
+      toast.error('Le nombre de gagnants doit être entre 0 et le nombre total');
+      return;
+    }
+
     setLoading(true);
 
+    // Generate ticket codes
+    const timestamp = Date.now().toString(36).toUpperCase();
     const newTickets = [];
+    
+    // Create array of winner positions
+    const winnerPositions = new Set<number>();
+    while (winnerPositions.size < winnerCount) {
+      winnerPositions.add(Math.floor(Math.random() * count));
+    }
+
     for (let i = 0; i < count; i++) {
-      const code = `TKT-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      const isWinner = Math.random() < winnerPercent;
+      const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const code = `TKT-${timestamp}-${randomPart}`;
+      const isWinner = winnerPositions.has(i);
       newTickets.push({
         ticket_code: code,
         is_winner: isWinner,
-        prize_amount: isWinner ? prize : 0
+        prize_amount: isWinner ? prizeAmount : 0,
+        predefined_result: isWinner ? 'win' : 'lose'
       });
     }
 
@@ -117,12 +157,29 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
     if (error) {
       toast.error('Erreur lors de l\'ajout en masse');
     } else {
-      toast.success(`${count} tickets ajoutés avec succès`);
+      const totalPrizePool = winnerCount * prizeAmount;
+      toast.success(
+        `${count} tickets générés (${winnerCount} gagnants, pool: ${totalPrizePool.toLocaleString()} FC)`
+      );
       setShowAddDialog(false);
       onUpdate();
     }
 
     setLoading(false);
+  };
+
+  const disableTicket = async (id: string) => {
+    const { error } = await supabase
+      .from('physical_tickets')
+      .update({ status: 'expired' })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Erreur lors de la désactivation');
+    } else {
+      toast.success('Ticket désactivé');
+      onUpdate();
+    }
   };
 
   const deleteTicket = async (id: string) => {
@@ -221,14 +278,27 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
                     </div>
                     {newTicketIsWinner && (
                       <div>
-                        <Label>Montant du gain (FC)</Label>
-                        <Input
-                          type="number"
-                          value={newTicketPrize}
-                          onChange={(e) => setNewTicketPrize(e.target.value)}
-                          placeholder="1000"
-                          className="mt-1"
-                        />
+                        <Label>Montant du gain (XAF)</Label>
+                        <Select value={newTicketPrize} onValueChange={setNewTicketPrize}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Sélectionner un montant" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRIZE_OPTIONS.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                            <SelectItem value="custom">Montant personnalisé</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {newTicketPrize === 'custom' && (
+                          <Input
+                            type="number"
+                            value={customPrize}
+                            onChange={(e) => setCustomPrize(e.target.value)}
+                            placeholder="Montant en FC"
+                            className="mt-2"
+                          />
+                        )}
                       </div>
                     )}
                     <Button onClick={addSingleTicket} disabled={loading} className="w-full bg-amber-500 hover:bg-amber-600">
@@ -236,32 +306,61 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
                     </Button>
                   </TabsContent>
                   <TabsContent value="bulk" className="space-y-4 mt-4">
-                    <div>
-                      <Label>Nombre de tickets à générer</Label>
-                      <Input
-                        type="number"
-                        value={bulkCount}
-                        onChange={(e) => setBulkCount(e.target.value)}
-                        className="mt-1"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Nombre total de tickets</Label>
+                        <Input
+                          type="number"
+                          value={bulkCount}
+                          onChange={(e) => setBulkCount(e.target.value)}
+                          className="mt-1"
+                          min="1"
+                          max="1000"
+                        />
+                      </div>
+                      <div>
+                        <Label>Nombre de gagnants</Label>
+                        <Input
+                          type="number"
+                          value={bulkWinnerCount}
+                          onChange={(e) => setBulkWinnerCount(e.target.value)}
+                          className="mt-1"
+                          min="0"
+                          max={bulkCount}
+                        />
+                      </div>
                     </div>
                     <div>
-                      <Label>Pourcentage de gagnants (%)</Label>
-                      <Input
-                        type="number"
-                        value={bulkWinnerPercent}
-                        onChange={(e) => setBulkWinnerPercent(e.target.value)}
-                        className="mt-1"
-                      />
+                      <Label>Montant par ticket gagnant (XAF)</Label>
+                      <Select value={bulkPrize} onValueChange={setBulkPrize}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Sélectionner un montant" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRIZE_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                          <SelectItem value="custom">Montant personnalisé</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {bulkPrize === 'custom' && (
+                        <Input
+                          type="number"
+                          value={bulkCustomPrize}
+                          onChange={(e) => setBulkCustomPrize(e.target.value)}
+                          placeholder="Montant en FC"
+                          className="mt-2"
+                        />
+                      )}
                     </div>
-                    <div>
-                      <Label>Montant du gain par ticket gagnant (FC)</Label>
-                      <Input
-                        type="number"
-                        value={bulkPrize}
-                        onChange={(e) => setBulkPrize(e.target.value)}
-                        className="mt-1"
-                      />
+                    <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-sm">
+                      <p className="font-medium text-amber-800 dark:text-amber-200">Résumé:</p>
+                      <p className="text-amber-700 dark:text-amber-300">
+                        {parseInt(bulkCount) || 0} tickets dont {parseInt(bulkWinnerCount) || 0} gagnants
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-300">
+                        Pool de prix: {((parseInt(bulkWinnerCount) || 0) * (bulkPrize === 'custom' ? parseInt(bulkCustomPrize) || 0 : parseInt(bulkPrize) || 0)).toLocaleString()} FC
+                      </p>
                     </div>
                     <Button onClick={addBulkTickets} disabled={loading} className="w-full bg-amber-500 hover:bg-amber-600">
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : `Générer ${bulkCount} tickets`}
@@ -369,10 +468,15 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
                           ? 'bg-blue-500/20 text-blue-600 border-blue-500/30' 
                           : ticket.status === 'used'
                           ? 'bg-gray-500/20 text-gray-600 border-gray-500/30'
-                          : 'bg-purple-500/20 text-purple-600 border-purple-500/30'
+                          : ticket.status === 'sold'
+                          ? 'bg-purple-500/20 text-purple-600 border-purple-500/30'
+                          : 'bg-red-500/20 text-red-600 border-red-500/30'
                       }
                     >
-                      {ticket.status === 'available' ? 'Disponible' : ticket.status === 'used' ? 'Utilisé' : 'Vendu'}
+                      {ticket.status === 'available' ? 'Disponible' : 
+                       ticket.status === 'used' ? 'Utilisé' : 
+                       ticket.status === 'sold' ? 'Vendu' : 
+                       ticket.status === 'expired' ? 'Désactivé' : ticket.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-gray-500">
@@ -382,16 +486,41 @@ export const PhysicalTicketManagement = ({ tickets, onUpdate }: PhysicalTicketMa
                     {ticket.used_at ? format(new Date(ticket.used_at), 'dd/MM/yyyy HH:mm', { locale: fr }) : '-'}
                   </TableCell>
                   <TableCell className="text-right">
-                    {ticket.status === 'available' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteTicket(ticket.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <div className="flex gap-1 justify-end">
+                      {ticket.status === 'available' && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => disableTicket(ticket.id)}
+                            className="text-orange-500 hover:text-orange-700 hover:bg-orange-50"
+                            title="Désactiver"
+                          >
+                            <Ban className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteTicket(ticket.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      {ticket.status === 'sold' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => disableTicket(ticket.id)}
+                          className="text-orange-500 hover:text-orange-700 hover:bg-orange-50"
+                          title="Désactiver"
+                        >
+                          <Ban className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

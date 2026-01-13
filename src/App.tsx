@@ -19,6 +19,7 @@ import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
 import AIFootball from "./pages/AIFootball";
+import PhysicalTickets from "./pages/PhysicalTickets";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const AppContent = () => {
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin-panel" element={<AdminPanel />} />
         <Route path="/ai-football" element={<AIFootball />} />
+        <Route path="/physical-tickets" element={<PhysicalTickets />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 
