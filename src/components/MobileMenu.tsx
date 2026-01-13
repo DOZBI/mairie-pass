@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Menu, LogOut, Ticket, Gift, Wallet, Settings, HelpCircle, User, Home } from "lucide-react";
+import { Menu, LogOut, Ticket, Gift, Wallet, Settings, HelpCircle, User, Home, Sparkles } from "lucide-react";
 import * as React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -26,6 +26,7 @@ const MobileMenu = () => {
   ];
 
   const menuItems = [
+    { title: "Tickets Physiques", icon: <Sparkles className="h-5 w-5" />, action: () => navigate("/physical-tickets") },
     { title: "Mes Tickets", icon: <Gift className="h-5 w-5" />, action: () => navigate("/my-tickets") },
     ...(isAdmin
       ? [{ title: "Administration", icon: <Settings className="h-5 w-5" />, action: () => navigate("/admin") }]
